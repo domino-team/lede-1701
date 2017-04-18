@@ -1,0 +1,196 @@
+--- a/target/linux/ramips/base-files/etc/board.d/01_leds
++++ b/target/linux/ramips/base-files/etc/board.d/01_leds
+@@ -176,6 +176,9 @@ gl-mt300n|\
+ gl-mt750)
+ 	set_wifi_led "$board:wlan"
+ 	;;
++gl-mt300n-v2)
++	set_wifi_led "$board:wlan" ra0
++	;;
+ hc5661)
+ 	ucidef_set_led_default "system" "system" "$board:blue:system" "1"
+ 	ucidef_set_led_netdev "internet" "internet" "$board:blue:internet" "eth0.2"
+--- a/target/linux/ramips/base-files/etc/board.d/02_network
++++ b/target/linux/ramips/base-files/etc/board.d/02_network
+@@ -138,6 +138,7 @@ ramips_setup_interfaces()
+ 	f5d8235-v2|\
+ 	gl-mt300a|\
+ 	gl-mt300n|\
++	gl-mt300n-v2|\
+ 	gl-mt750|\
+ 	hg255d|\
+ 	jhr-n805r|\
+--- a/target/linux/ramips/base-files/lib/ramips.sh
++++ b/target/linux/ramips/base-files/lib/ramips.sh
+@@ -208,6 +208,9 @@ ramips_board_detect() {
+ 	*"GL-MT300N")
+ 		name="gl-mt300n"
+ 		;;
++	*"GL-MT300N-V2")
++		name="gl-mt300n-v2"
++		;;
+ 	*"GL-MT750")
+ 		name="gl-mt750"
+ 		;;
+--- a/target/linux/ramips/base-files/lib/upgrade/platform.sh
++++ b/target/linux/ramips/base-files/lib/upgrade/platform.sh
+@@ -59,6 +59,7 @@ platform_check_image() {
+ 	freestation5|\
+ 	gl-mt300a|\
+ 	gl-mt300n|\
++	gl-mt300n-v2|\
+ 	gl-mt750|\
+ 	hc5*61|\
+ 	hg255d|\
+--- a/target/linux/ramips/image/mt7628.mk
++++ b/target/linux/ramips/image/mt7628.mk
+@@ -55,3 +55,11 @@ define Device/mac1200r-v2
+   DEVICE_TITLE := Mercury MAC1200R v2.0
+ endef
+ TARGET_DEVICES += mac1200r-v2
++
++define Device/gl-mt300n-v2
++  DTS := GL-MT300N-V2
++  IMAGE_SIZE := $(ralink_default_fw_size_16M)
++  DEVICE_TITLE := GL-iNet GL-MT300N-V2
++  DEVICE_PACKAGES := kmod-usb2 kmod-usb-ohci kmod-usb-ledtrig-usbport
++endef
++TARGET_DEVICES += gl-mt300n-v2
+--- /dev/null
++++ b/target/linux/ramips/dts/GL-MT300N-V2.dts
+@@ -0,0 +1,135 @@
++/dts-v1/;
++
++#include "mt7628an.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/{
++	compatible = "GL-MT300N-V2", "ralink,mt7620an-soc";
++	model = "GL-MT300N-V2";
++
++	chosen {
++		bootargs = "console=ttyS0,115200";
++	};
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x0 0x4000000>;
++	};
++
++	gpio-leds {
++		compatible = "gpio-leds";
++
++		lan {
++			label = "gl-mt300n-v2:lan";
++			gpios = <&gpio1 10 1>;
++		};
++
++		wan {
++			label = "gl-mt300n-v2:wan";
++			gpios = <&gpio1 11 1>;
++		};
++
++		wlan {
++			label = "gl-mt300n-v2:wlan";
++			gpios = <&gpio1 12 1>;
++		};
++	};
++
++	gpio-keys {
++		compatible = "gpio-keys-polled";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		poll-interval = <20>;
++
++		reset {
++			label = "reset";
++			gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_RESTART>;
++		};
++
++		BIT_0 {
++			label = "BIT_0";
++			gpios = <&gpio0 0 1>;
++			linux,code = <0x100>;
++		};
++
++		BIT_1 {
++			label = "BIT_1";
++			gpios = <&gpio0 3 1>;
++			linux,code = <0x101>;
++		};
++	};
++
++};
++
++&pinctrl {
++	state_default: pinctrl0 {
++		gpio {
++			ralink,group = "refclk", "gpio", "wled_an", "p0led_an", "p1led_an", "i2c", "i2s";
++			ralink,function = "gpio";
++		};
++	};
++};
++
++&ethernet {
++	mtd-mac-address = <&factory 0x8000>;
++};
++
++&wmac {
++	status = "okay";
++	ralink,mtd-eeprom = <&factory 0x04000>;
++};
++
++&i2c {
++	status = "okay";
++};
++
++&spi0 {
++	status = "okay";
++
++	m25p80@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <10000000>;
++		m25p,chunked-io = <32>;
++
++		partition@0 {
++			label = "u-boot";
++			reg = <0x0 0x30000>;
++			read-only;
++		};
++
++		partition@30000 {
++			label = "u-boot-env";
++			reg = <0x30000 0x10000>;
++			read-only;
++		};
++
++		factory: partition@40000 {
++			label = "factory";
++			reg = <0x40000 0x10000>;
++			read-only;
++		};
++
++		partition@50000 {
++			label = "firmware";
++			reg = <0x50000 0xff0000>;
++		};
++	};
++};
++
++&sdhci {
++	status = "okay";
++};
++
++&ehci {
++	status = "okay";
++};
++
++&ohci {
++	status = "okay";
++};
