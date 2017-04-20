@@ -74,7 +74,7 @@
 };
 
 &ethernet {
-	mtd-mac-address = <&factory 0x8000>;
+	mtd-mac-address = <&factory 0x04000>;
 };
 
 &wmac {
