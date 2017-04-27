@@ -49,11 +49,11 @@ static unsigned long interval = 40;
 module_param(interval, ulong, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(interval,"Polling interval in ms for port state scanning.");
 
-static bool poll_enable = 1;
+static bool poll_enable = 0;
 module_param(poll_enable, bool, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(poll_enable,"Grant port state polling.");
 
-static int port_if_id[] = {2,9,10,15,16};
+static int port_if_id[] = {2};
 module_param_array(port_if_id, int, NULL, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(port_if_id,"Preconfigured one port per vlan interface indexes.");
 
