@@ -26,12 +26,6 @@
 #include <linux/of.h>
 #include <linux/version.h>
 #include <uapi/linux/mii.h>
-#include <linux/hrtimer.h>
-#include <linux/ktime.h>
-#include <asm/types.h>
-#include <linux/netlink.h>
-#include <net/netlink.h>
-#include <linux/rtnetlink.h>
 
 #define SWCONFIG_DEVNAME	"switch%d"
 
@@ -39,23 +33,6 @@
 
 MODULE_AUTHOR("Felix Fietkau <nbd@nbd.name>");
 MODULE_LICENSE("GPL");
-
-static struct hrtimer poll_timer;
-static ktime_t poll_timer_interval;
-static unsigned long base_interval;
-static bool first_poll = 1;
-
-static unsigned long interval = 40;
-module_param(interval, ulong, S_IRUGO | S_IWUSR);
-MODULE_PARM_DESC(interval,"Polling interval in ms for port state scanning.");
-
-static bool poll_enable = 0;
-module_param(poll_enable, bool, S_IRUGO | S_IWUSR);
-MODULE_PARM_DESC(poll_enable,"Grant port state polling.");
-
-static int port_if_id[] = {8,4,5,6,7};
-module_param_array(port_if_id, int, NULL, S_IRUGO | S_IWUSR);
-MODULE_PARM_DESC(port_if_id,"Preconfigured one port per vlan interface indexes.");
 
 static int swdev_id;
 static struct list_head swdevs;
@@ -1136,18 +1113,12 @@ register_switch(struct switch_dev *dev, struct net_device *netdev)
 	}
 	BUG_ON(!dev->alias);
 
-	dev->port_state = NULL;
-
-
 	/* Make sure swdev_id doesn't overflow */
 	if (swdev_id == INT_MAX) {
 		return -ENOMEM;
 	}
 
 	if (dev->ports > 0) {
-		dev->port_state = kzalloc(sizeof(int) * dev->ports, GFP_KERNEL);
-		dev->port_state[dev->ports-1] = 1; /* CPU port */
-
 		dev->portbuf = kzalloc(sizeof(struct switch_port) *
 				dev->ports, GFP_KERNEL);
 		if (!dev->portbuf)
@@ -1203,7 +1174,6 @@ unregister_switch(struct switch_dev *dev)
 {
 	swconfig_destroy_led_trigger(dev);
 	kfree(dev->portbuf);
-	kfree(dev->port_state);
 	mutex_lock(&dev->sw_mutex);
 	swconfig_lock();
 	list_del(&dev->dev_list);
@@ -1211,80 +1181,6 @@ unregister_switch(struct switch_dev *dev)
 	mutex_unlock(&dev->sw_mutex);
 }
 EXPORT_SYMBOL_GPL(unregister_switch);
-static int get_link_state(struct switch_dev *dev, int port)
-{
-	struct switch_port_link link;
-	link.link=0;
-
-	if(dev->ops->get_port_link(dev, port, &link))
-		return -EINVAL;
-
-	if(link.link)
-		return 1;
-
-	return 0;
-}
-
-static void modify_if_carrier(int port, int ifidx, int state)
-{
-	struct net_device *dev;
-	list_for_each_entry(dev, &init_net.dev_base_head, dev_list) {
-		if(dev->ifindex == ifidx) {
-			if(state == 1)
-				netif_carrier_on(dev);
-			else
-				netif_carrier_off(dev);
-		}
-	}
-}
-
-static enum hrtimer_restart poll_timer_callback(struct hrtimer *timer)
-{
-	struct switch_dev *dev;
-	int i,cur_port_state;
-
-	if(poll_enable) {
-			dev = list_entry((&swdevs)->next, typeof(*dev), dev_list);
-			for(i=0; i < dev->ports-1; i++) {
-				cur_port_state = get_link_state(dev,i);
-				if(dev->port_state[i] == 0 && cur_port_state == 1) {
-					modify_if_carrier(i,port_if_id[i],1);
-					dev->port_state[i] = 1;
-				}
-				else if(dev->port_state[i] == 1 && cur_port_state == 0) {
-					modify_if_carrier(i,port_if_id[i],0);
-					dev->port_state[i] = 0;
-				}
-				else if(first_poll) {
-					if(cur_port_state){
-						modify_if_carrier(i,port_if_id[i],1);
-					}
-					else{
-						modify_if_carrier(i,port_if_id[i],0);
-					}
-				}
-			}
-			first_poll = 0;
-	}
-	else {
-		if(base_interval == interval)
-			base_interval = interval+1;
-		first_poll = 1;
-		poll_timer_interval = ktime_set(0, 100*1000000);
-		hrtimer_forward(&poll_timer, ktime_get(), poll_timer_interval);
-		return HRTIMER_RESTART;
-	}
-
-	if(interval != base_interval) {
-		if(interval < 1)
-			interval = 1;
-		poll_timer_interval = ktime_set(0, interval*1000000);
-		base_interval = interval;
-	}
-
-	hrtimer_forward(&poll_timer, ktime_get(), poll_timer_interval);
-	return HRTIMER_RESTART;
-}
 
 int
 switch_generic_set_link(struct switch_dev *dev, int port,
@@ -1325,15 +1221,8 @@ switch_generic_set_link(struct switch_dev *dev, int port,
 static int __init
 swconfig_init(void)
 {
-	base_interval = interval;
-	poll_timer_interval = ktime_set(0, interval*1000000);
-	hrtimer_init(&poll_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-	poll_timer.function = &poll_timer_callback;
-
-	hrtimer_start(&poll_timer, poll_timer_interval, HRTIMER_MODE_REL);
-
 	INIT_LIST_HEAD(&swdevs);
-
+	
 	return genl_register_family_with_ops(&switch_fam, swconfig_ops);
 }
 
@@ -1341,8 +1230,6 @@ static void __exit
 swconfig_exit(void)
 {
 	genl_unregister_family(&switch_fam);
-	hrtimer_cancel(&poll_timer);
-
 }
 
 module_init(swconfig_init);
