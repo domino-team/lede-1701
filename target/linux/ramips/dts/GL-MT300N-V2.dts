@@ -22,7 +22,7 @@
 		compatible = "gpio-leds";
 
 		lan {
-			label = "gl-mt300n-v2:lan";
+			label = "gl-mt300n-v2:usbpow";
 			gpios = <&gpio1 10 1>;
 		};
 
