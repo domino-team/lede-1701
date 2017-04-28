@@ -82,9 +82,9 @@
 +	gpio-leds {
 +		compatible = "gpio-leds";
 +
-+		lan {
++		usbpow {
 +			label = "gl-mt300n-v2:usbpow";
-+			gpios = <&gpio1 10 1>;
++			gpios = <&gpio0 11 1>;
 +		};
 +
 +		wan {
