@@ -21,9 +21,9 @@
 	gpio-leds {
 		compatible = "gpio-leds";
 
-		lan {
+		usbpow {
 			label = "gl-mt300n-v2:usbpow";
-			gpios = <&gpio1 10 1>;
+			gpios = <&gpio0 11 1>;
 		};
 
 		wan {
@@ -117,7 +117,7 @@
 
 		partition@50000 {
 			label = "firmware";
-			reg = <0x50000 0xff0000>;
+			reg = <0x50000 0xf00000>;
 		};
 	};
 };
