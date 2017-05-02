@@ -1,0 +1,21 @@
+config wifi-device      mt7628
+	option type     mt7628
+	option vendor   ralink
+	option band     2.4G
+	option channel  'auto'
+	option autoch_skip '12;13;'
+	option wifimode    '9'
+	option bw          '1'
+	option country     'CN'
+	option region      '1'
+	option ht_txstream '2'
+	option ht_rxstream '2'
+
+config wifi-iface
+	option device   mt7628
+	option ifname   ra0
+	option network  lan
+	option mode     ap
+	option ssid     LEDE
+	option encryption psk2
+	option key      goodlife
