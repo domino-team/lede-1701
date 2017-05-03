@@ -194,3 +194,14 @@
 +&ohci {
 +	status = "okay";
 +};
+--- a/target/linux/ramips/mt7628/target.mk
++++ b/target/linux/ramips/mt7628/target.mk
+@@ -7,7 +7,7 @@ BOARDNAME:=MT7628 based boards
+ FEATURES+=usb
+ CPU_TYPE:=24kc
+ 
+-DEFAULT_PACKAGES += kmod-mt76
++DEFAULT_PACKAGES += mt7628-binary
+ 
+ define Target/Description
+ 	Build firmware images for Ralink MT7628 based boards.
