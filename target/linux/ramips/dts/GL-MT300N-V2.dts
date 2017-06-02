@@ -79,7 +79,7 @@
 
 &wmac {
 	status = "okay";
-	ralink,mtd-eeprom = <&factory 0x8000>;
+	ralink,mtd-eeprom = <&factory 0x04000>;
 };
 
 &i2c {
@@ -132,13 +132,4 @@
 
 &ohci {
 	status = "okay";
-};
-
-&pcie {
-	status = "okay";
-
-	pcie-bridge {
-		mediatek,mtd-eeprom = <&factory 0>;
-		mediatek,2ghz = <0>;
-	};
 };
