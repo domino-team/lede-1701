@@ -5,21 +5,24 @@
  	set_wifi_led "$board:wlan"
  	;;
 +gl-mt300n-v2)
-+	set_wifi_led "$board:wlan" ra0
++	set_wifi_led "$board:red:wlan" ra0
 +	;;
  hc5661)
  	ucidef_set_led_default "system" "system" "$board:blue:system" "1"
  	ucidef_set_led_netdev "internet" "internet" "$board:blue:internet" "eth0.2"
 --- a/target/linux/ramips/base-files/etc/board.d/02_network
 +++ b/target/linux/ramips/base-files/etc/board.d/02_network
-@@ -138,6 +138,7 @@ ramips_setup_interfaces()
- 	f5d8235-v2|\
- 	gl-mt300a|\
- 	gl-mt300n|\
-+	gl-mt300n-v2|\
- 	gl-mt750|\
- 	hg255d|\
- 	jhr-n805r|\
+@@ -156,6 +156,10 @@ ramips_setup_interfaces()
+ 		ucidef_add_switch "switch0" \
+ 			"1:lan" "2:lan" "3:lan" "4:lan" "0:wan" "6@eth0"
+ 		;;
++	gl-mt300n-v2)
++		ucidef_add_switch "switch0" \
++			"1:lan" "0:wan" "6@eth0"
++		;;
+ 	awapn2403)
+ 		ucidef_add_switch "switch0" \
+ 			"0:lan" "1:wan" "6@eth0"
 --- a/target/linux/ramips/base-files/lib/ramips.sh
 +++ b/target/linux/ramips/base-files/lib/ramips.sh
 @@ -208,6 +208,9 @@ ramips_board_detect() {
@@ -58,7 +61,7 @@
 +TARGET_DEVICES += gl-mt300n-v2
 --- /dev/null
 +++ b/target/linux/ramips/dts/GL-MT300N-V2.dts
-@@ -0,0 +1,135 @@
+@@ -0,0 +1,141 @@
 +/dts-v1/;
 +
 +#include "mt7628an.dtsi"
@@ -67,7 +70,7 @@
 +#include <dt-bindings/input/input.h>
 +
 +/{
-+	compatible = "GL-MT300N-V2", "ralink,mt7620an-soc";
++	compatible = "gl-inet,gl-mt300n-v2", "ralink,mt7628an-soc";
 +	model = "GL-MT300N-V2";
 +
 +	chosen {
@@ -76,25 +79,20 @@
 +
 +	memory@0 {
 +		device_type = "memory";
-+		reg = <0x0 0x4000000>;
++		reg = <0x0 0x8000000>;
 +	};
 +
 +	gpio-leds {
 +		compatible = "gpio-leds";
 +
-+		usbpow {
-+			label = "gl-mt300n-v2:usbpow";
-+			gpios = <&gpio0 11 1>;
-+		};
-+
 +		wan {
-+			label = "gl-mt300n-v2:wan";
-+			gpios = <&gpio1 11 1>;
++			label = "gl-mt300n-v2:blue:wan";
++			gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
 +		};
 +
 +		wlan {
-+			label = "gl-mt300n-v2:wlan";
-+			gpios = <&gpio1 12 1>;
++			label = "gl-mt300n-v2:red:wlan";
++			gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
 +		};
 +	};
 +
@@ -110,16 +108,27 @@
 +			linux,code = <KEY_RESTART>;
 +		};
 +
-+		BIT_0 {
-+			label = "BIT_0";
-+			gpios = <&gpio0 0 1>;
-+			linux,code = <0x100>;
++		BTN_0 {
++			label = "BTN_0";
++			gpios = <&gpio0 0 GPIO_ACTIVE_LOW>;
++			linux,code = <BTN_0>;
 +		};
 +
-+		BIT_1 {
-+			label = "BIT_1";
-+			gpios = <&gpio0 3 1>;
-+			linux,code = <0x101>;
++		BTN_1 {
++			label = "BTN_1";
++			gpios = <&gpio0 3 GPIO_ACTIVE_LOW>;
++			linux,code = <BTN_0>;
++		};
++	};
++
++	gpio_export {
++		compatible = "gpio-export";
++		#size-cells = <0>;
++
++		usb {
++			gpio-export,name = "usb";
++			gpio-export,output = <1>;
++			gpios = <&gpio0 11 GPIO_ACTIVE_LOW>;
 +		};
 +	};
 +
@@ -128,19 +137,19 @@
 +&pinctrl {
 +	state_default: pinctrl0 {
 +		gpio {
-+			ralink,group = "refclk", "gpio", "wled_an", "p0led_an", "p1led_an", "i2c", "i2s";
++			ralink,group = "wdt", "gpio", "wled_an", "p0led_an", "p1led_an", "i2c", "i2s";
 +			ralink,function = "gpio";
 +		};
 +	};
 +};
 +
 +&ethernet {
-+	mtd-mac-address = <&factory 0x04000>;
++	mtd-mac-address = <&factory 0x4>;
 +};
 +
 +&wmac {
 +	status = "okay";
-+	ralink,mtd-eeprom = <&factory 0x04000>;
++	ralink,mtd-eeprom = <&factory 0x4>;
 +};
 +
 +&i2c {
