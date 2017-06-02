@@ -183,36 +183,6 @@ alfa_check_image() {
 	return 0
 }
 
-gl_ar300m_is_nand() {
-	local size="$(mtd_get_part_size 'ubi')"
-	case "$size" in
-	132120576)
-		return 0
-		;;
-	*)
-		return 1
-		;;
-	esac
-}
-
-# $(1) image file
-# $(2) board name
-# $(3) magic
-platform_check_image_gl_ar300m() {
-	local board=$2
-	local magic=$3
-
-	if gl_ar300m_is_nand; then
-		nand_do_platform_check $board $1
-		return $?
-	else
-		[ "$magic" != "2705" ] && {
-			echo "Invalid image type."
-			return 1
-		}
-		return 0
-	fi
-}
 platform_nand_board_name() {
 	local board=$(ar71xx_board_name)
 
@@ -267,6 +237,7 @@ platform_check_image() {
 	ew-dorin-router|\
 	ew-dorin|\
 	gl-ar150|\
+	gl-ar300m|\
 	gl-ar300|\
 	gl-domino|\
 	gl-mifi|\
@@ -572,11 +543,6 @@ platform_check_image() {
 		cybertan_check_image "$1" && return 0
 		return 1
 		;;
-	gl-ar300m)
-		platform_check_image_gl_ar300m "$1" "$board" "$magic" && return 0
-		return 1
-		;;
-
 	nbg6616|\
 	uap-pro|\
 	unifi-outdoor-plus)
@@ -641,9 +607,6 @@ platform_pre_upgrade() {
 	local board=$(ar71xx_board_name)
 
 	case "$board" in
-	gl-ar300m)
-		platform_pre_upgrade_gl_ar300m "$1"
-		;;
 	rb-941-2nd)
 		;;
 	rb*|\

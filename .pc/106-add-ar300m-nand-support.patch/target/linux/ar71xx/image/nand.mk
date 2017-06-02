@@ -24,25 +24,6 @@ define Device/domywifi-dw33d
 endef
 TARGET_DEVICES += domywifi-dw33d
 
-#define Device/GL-AR300MD
-  #DEVICE_TITLE := GL AR300M(Dual)
-  #DEVICE_PACKAGES := kmod-usb-core kmod-usb2 kmod-usb-storage kmod-usb-ledtrig-usbport kmod-ath10k ath10k-firmware-qca988x
-  #BOARDNAME = GL-AR300M
-  #IMAGE_SIZE = 16000k
-  #CONSOLE = ttyS0,115200
-  #MTDPARTS = spi0.0:256k(u-boot)ro,64k(u-boot-env),16000k(reserved),64k(art)ro,16000k@0x50000(firmware);spi0.1:2048k(kernel),-(ubi)
-  #KERNEL := kernel-bin | patch-cmdline | lzma | uImage lzma
-  #IMAGE/sysupgrade.bin =append-kernel | pad-to 2048k | append-rootfs | pad-rootfs | check-size $$$$(IMAGE_SIZE)
-#endef
-#TARGET_DEVICES += GL-AR300MD
-
-
-define LegacyDevice/GL-AR300MD
-	DEVICE_TITLE := GL-AR300M with nand flash
-	DEVICE_PACKAGES := kmod-usb-core kmod-usb2 uboot-envtools
-endef
-LEGACY_DEVICES += GL-AR300MD
-
 define Build/MerakiNAND
 	-$(STAGING_DIR_HOST)/bin/mkmerakifw \
 		-B $(BOARDNAME) -s \

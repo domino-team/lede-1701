@@ -263,8 +263,6 @@ ew-dorin_mtdlayout_16M=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env),16000k(fir
 f9k1115v2_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env),14464k(rootfs),1408k(kernel),64k(nvram)ro,64k(envram)ro,64k(art)ro,15872k@0x50000(firmware)
 dlrtdev_mtdlayout=mtdparts=spi0.0:256k(uboot)ro,64k(config)ro,6208k(firmware),64k(caldata)ro,640k(certs),960k(unknown)ro,64k@0x7f0000(caldata_copy)
 dlrtdev_mtdlayout_fat=mtdparts=spi0.0:256k(uboot)ro,64k(config)ro,7168k(firmware),640k(certs),64k(caldata)ro,64k@0x660000(caldata_orig),6208k@0x50000(firmware_orig)
-gl-ar300md_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env),16000k(reserved),64k(art);spi0.1:2048k(kernel),-(ubi)
-
 planex_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,7744k(firmware),128k(art)ro
 ubntxm_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,7552k(firmware),256k(cfg)ro,64k(EEPROM)ro
 uap_pro_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,1536k(kernel),14208k(rootfs),256k(cfg)ro,64k(EEPROM)ro,15744k@0x50000(firmware)
@@ -814,36 +812,6 @@ define Image/Build/ZyXELNAND
 	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/$(2)-kernel.jffs2)
 endef
 
-Image/Build/GLNAND/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(4))
-
-Image/Build/GLNAND/buildkernel=$(call MkuImageLzma,$(2),$(3) $(4))
-
- #$(1): rootfs image suffix
- #$(2): Board name (small caps)
- #$(3): Kernel board specific cmdline
- #$(4): Kernel mtdparts definition
- #$(5): suffix of the configuration file for ubinize
-define Image/Build/GLNAND
-	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
-	$(CP) $(KDIR)/root.squashfs-raw $(KDIR_TMP)/root.squashfs
-	echo -ne '\xde\xad\xc0\xde' > $(KDIR_TMP)/jffs2.eof
-	$(call ubinize,ubinize-$(5).ini,$(KDIR_TMP),$(KDIR_TMP)/$(2)-root.ubi,128KiB,2048,)
-
-	( \
-		dd if=$(KDIR_TMP)/vmlinux-$(2).uImage \
-			of=$(call imgname,kernel,$(2)).bin conv=sync; \
-		dd if=$(KDIR_TMP)/$(2)-root.ubi \
-			of=$(call imgname,$(1),$(2)-rootfs).ubi bs=128k conv=sync; \
-	)
-	( \
-		dd if=$(call imgname,kernel,$(2)).bin bs=$(kernelsize) conv=sync; \
-		dd if=$(call imgname,$(1),$(2)-rootfs).ubi \
-	) > $(call imgname,ubi-factory,$(2)).img
-
-	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/vmlinux-$(2).uImage)
-endef
-
-
 
 Image/Build/OpenMesh/buildkernel=$(call MkuImageLzma,$(2))
 Image/Build/OpenMesh/initramfs=$(call MkuImageLzma/initramfs,$(2),)
@@ -1065,8 +1033,6 @@ $(eval $(call SingleProfile,NetgearNAND,64k,WNDR4300V1,wndr4300,WNDR4300,ttyS0,1
 $(eval $(call SingleProfile,NetgearNAND,64k,R6100,r6100,R6100,ttyS0,115200,$$(r6100_mtdlayout),0x36303030,R6100,"",-H 29764434+0+128+128+2x2+2x2,wndr4300))
 
 $(eval $(call SingleProfile,ZyXELNAND,128k,NBG6716,nbg6716,NBG6716,ttyS0,115200,NBG6716,$$(zyx_nbg6716_mtdlayout),mem=256M))
-
-$(eval $(call SingleProfile,GLNAND,64k,GL-AR300MD,gl-ar300m,GL-AR300M,ttyS0,115200,$$(gl-ar300md_mtdlayout),gl-ar300m))
 
 endif # ifeq ($(SUBTARGET),nand)
 
