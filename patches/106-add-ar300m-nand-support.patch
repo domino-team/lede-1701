@@ -28,7 +28,7 @@
  CONFIG_MTD_SPLIT_LZMA_FW=y
 --- /dev/null
 +++ b/target/linux/ar71xx/files/drivers/mtd/nand/ath79_spinand.c
-@@ -0,0 +1,1173 @@
+@@ -0,0 +1,1174 @@
 +/*
 + * Copyright (c) 2015 The Linux Foundation. All rights reserved.
 + *
@@ -622,6 +622,7 @@
 +	if ((status & ATH79_SPINAND_STATUS_E_FAIL_MASK) == ATH79_SPINAND_STATUS_E_FAIL) {
 +		dev_err(&spi_nand->dev,
 +			"erase error, block %d\n", ATH79_SPINAND_PAGE_TO_BLOCK(page));
++			nand_markbad_bbt(mtd,ATH79_SPINAND_PAGE_TO_BLOCK(page)<<(mtd->erasesize_shift));
 +		return -1;
 +	}
 +

@@ -591,6 +591,7 @@ static int ath79_spinand_erase_block(struct mtd_info *mtd,
 	if ((status & ATH79_SPINAND_STATUS_E_FAIL_MASK) == ATH79_SPINAND_STATUS_E_FAIL) {
 		dev_err(&spi_nand->dev,
 			"erase error, block %d\n", ATH79_SPINAND_PAGE_TO_BLOCK(page));
+			nand_markbad_bbt(mtd,ATH79_SPINAND_PAGE_TO_BLOCK(page)<<(mtd->erasesize_shift));
 		return -1;
 	}
 
