@@ -1,3 +1,4 @@
 104-gl-mt300n-v2.patch
 105-swconfig-poll.patch
 106-add-ar300m-nand-support.patch
+107-ar300m-add-FW-PM-spinand.patch
