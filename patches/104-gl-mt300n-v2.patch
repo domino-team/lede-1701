@@ -23,6 +23,17 @@
  	awapn2403)
  		ucidef_add_switch "switch0" \
  			"0:lan" "1:wan" "6@eth0"
+@@ -425,6 +429,10 @@ ramips_setup_macs()
+ 		wan_mac="$(grep -m1 mac= "/dev/mtd${index}" | cut -d= -f2)"
+ 		lan_mac=$wan_mac
+ 		;;
++	gl-mt300n-v2)
++		lan_mac=$(mtd_get_mac_binary factory 4)
++		wan_mac=$(mtd_get_mac_binary factory 4)
++		;;
+ 	*)
+ 		lan_mac=$(cat /sys/class/net/eth0/address)
+ 		wan_mac=$(macaddr_add "$lan_mac" 1)
 --- a/target/linux/ramips/base-files/lib/ramips.sh
 +++ b/target/linux/ramips/base-files/lib/ramips.sh
 @@ -208,6 +208,9 @@ ramips_board_detect() {
