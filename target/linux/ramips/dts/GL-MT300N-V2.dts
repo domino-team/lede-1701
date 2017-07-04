@@ -22,12 +22,12 @@
 		compatible = "gpio-leds";
 
 		wan {
-			label = "gl-mt300n-v2:blue:wan";
+			label = "gl-mt300n-v2:lan";
 			gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
 		};
 
 		wlan {
-			label = "gl-mt300n-v2:red:wlan";
+			label = "gl-mt300n-v2:wlan";
 			gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
 		};
 	};
