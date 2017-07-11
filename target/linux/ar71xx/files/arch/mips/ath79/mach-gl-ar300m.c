@@ -145,7 +145,7 @@ static void __init gl_ar300m_setup(void)
     ath79_register_eth(0);
 
     /* LAN */
-    ath79_init_mac(ath79_eth1_data.mac_addr, art + GL_AR300M_MAC1_OFFSET, 0);
+    ath79_init_mac(ath79_eth1_data.mac_addr, art + GL_AR300M_MAC1_OFFSET, 1);
     ath79_eth1_data.phy_if_mode = PHY_INTERFACE_MODE_GMII;
     ath79_eth1_data.speed = SPEED_1000;
     ath79_eth1_data.duplex = DUPLEX_FULL;

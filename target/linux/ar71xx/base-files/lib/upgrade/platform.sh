@@ -637,6 +637,13 @@ platform_check_image() {
 	return 1
 }
 
+platform_pre_upgrade_gl_ar300m() {
+	if gl_ar300m_is_nand; then
+		nand_do_upgrade "$1"
+	fi
+}
+
+
 platform_pre_upgrade() {
 	local board=$(ar71xx_board_name)
 

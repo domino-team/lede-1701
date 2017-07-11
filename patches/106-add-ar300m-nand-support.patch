@@ -1473,7 +1473,18 @@
  	nbg6616|\
  	uap-pro|\
  	unifi-outdoor-plus)
-@@ -607,6 +641,9 @@ platform_pre_upgrade() {
+@@ -603,10 +637,20 @@ platform_check_image() {
+ 	return 1
+ }
+ 
++platform_pre_upgrade_gl_ar300m() {
++	if gl_ar300m_is_nand; then
++		nand_do_upgrade "$1"
++	fi
++}
++
++
+ platform_pre_upgrade() {
  	local board=$(ar71xx_board_name)
  
  	case "$board" in
