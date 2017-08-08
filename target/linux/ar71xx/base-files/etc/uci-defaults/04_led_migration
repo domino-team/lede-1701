@@ -80,7 +80,6 @@ wnr612-v2)
 wnr1000-v2)
 	migrate_leds "wnr1000v2:=netgear:"
 	;;
-
 *)
 	;;
 esac

@@ -124,7 +124,6 @@ ar71xx_setup_interfaces()
 	alfa-nx|\
 	gl-ar150|\
 	gl-ar300m|\
-	gl-ar750ac|\
 	gl-domino|\
 	gl-inet|\
 	gl-mifi|\
