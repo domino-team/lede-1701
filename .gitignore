@@ -25,3 +25,4 @@ key-build*
 .emacs.desktop*
 TAGS*~
 git-src
+package/gl-util/
