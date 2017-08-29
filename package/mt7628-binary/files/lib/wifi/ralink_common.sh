@@ -1,4 +1,4 @@
-# this file will be included in 
+# this file will be included in
 #     /lib/wifi/mt{chipname}.sh
 
 repair_wireless_uci() {
@@ -21,7 +21,7 @@ repair_wireless_uci() {
         echo "device name $device!!" >>/tmp/wifi.log
         echo "netif $netif" >>/tmp/wifi.log
         echo "nettype $nettype" >>/tmp/wifi.log
-    
+
         case "$device" in
             mt7620 | mt7602e | mt7603e | mt7628 | mt7688)
                 netif_new="ra"${ifn2g}
@@ -34,11 +34,11 @@ repair_wireless_uci() {
             * )
                 echo "device $device not recognized!! " >>/tmp/wifi.log
                 ;;
-        esac                    
-    
+        esac
+
         echo "ifn5g = ${ifn5g}, ifn2g = ${ifn2g}" >>/tmp/wifi.log
         echo "netif_new = ${netif_new}" >>/tmp/wifi.log
-            
+
         if [ "$netif" == "" ]; then
             echo "ifname empty, we'll fix it with ${netif_new}" >>/tmp/wifi.log
             uci -q set ${vif}.ifname=${netif_new}
@@ -187,7 +187,7 @@ prepare_ralink_wifi() {
     # use + 4, otherwise we can just use - 4.
     EXTCHA=0
     [ "$channel" != auto ] && [ "$channel" -lt "5" ] && EXTCHA=1
-    
+
 }
 
 scan_ralink_wifi() {
@@ -242,18 +242,17 @@ enable_ralink_wifi() {
 	chk8021x $device
         set_wifi_up "$vif" "$ifname"
     done
-	
+
 	sleep 2
 	br=`brctl show | grep ra0`
 	if [ -z "$br" ];then
 		brctl addif br-lan ra0
 	fi
 
-	/* Support wds mode */
-	wds=`uci get wireless.sta.wds`                                 
-	if [ "$wds" == "1" ];then      
+	wds=`uci get wireless.sta.wds`
+	if [ "$wds" == "1" ];then
 		brctl addif br-lan apcli0
-	fi 
+	fi
 }
 
 detect_ralink_wifi() {
@@ -279,7 +278,7 @@ detect_ralink_wifi() {
         * )
             echo "device $device not recognized!! " >>/tmp/wifi.log
             ;;
-    esac                    
+    esac
     cat <<EOF
 config wifi-device    $device
     option type     $device
