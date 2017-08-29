@@ -1,0 +1,311 @@
+#!/bin/sh
+. /lib/functions.sh
+
+STA_LIST=''
+
+scan_sta() {
+	echo "gl_health: started to scan sta"
+	iwpriv ra0 set SiteSurvey=0
+	sleep 2
+	STA_LIST=`iwpriv ra0 get_site_survey | grep '^[0-9]'`
+	echo "gl_health: finished scan sta"
+}
+
+function find_channel() {
+	echo "gl_health: started to find channel for SSID $1"
+	local ussid=$1
+	local _channel=$2
+	local ssid
+	local quality=0
+
+	while read line
+	do
+		ssid=`echo $line | awk '{print $2}'`
+		if [ "$ussid"x = "$ssid"x ];then
+			local ch=`echo $line | awk '{print $1}'`
+			q=`echo $line |awk '{print $6}'`
+			if [ "$q" -gt "$quality" ]; then
+				eval $_channel="'$ch'"
+			fi
+		fi
+done <<EOF
+$STA_LIST
+EOF
+	if [ -n "$_channel" ]; then
+		echo "gl_health: found channel $channel"
+	fi
+}
+
+function change_lan_ip(){
+	#this will check if wan ip is the same as lan_ip, if they are the same, will change lan_ip.
+	# this function will not work if we use bridge mode
+	lanip1=`ifconfig br-lan | grep 'inet addr:'| cut -d: -f2 | awk '{ print $1}'|cut -d. -f1`
+	lanip2=`ifconfig br-lan | grep 'inet addr:'| cut -d: -f2 | awk '{ print $1}'|cut -d. -f2`
+	lanip3=`ifconfig br-lan | grep 'inet addr:'| cut -d: -f2 | awk '{ print $1}'|cut -d. -f3`
+
+	wanip1=`ifconfig apcli0 | grep 'inet addr:'| cut -d: -f2 | awk '{ print $1}'|cut -d. -f1`
+	wanip2=`ifconfig apcli0 | grep 'inet addr:'| cut -d: -f2 | awk '{ print $1}'|cut -d. -f2`
+	wanip3=`ifconfig apcli0 | grep 'inet addr:'| cut -d: -f2 | awk '{ print $1}'|cut -d. -f3`
+
+	if [ "$wanip1"x = "$lanip1"x -a "$wanip2"x = "$lanip2"x -a "$wanip3"x = "$lanip3"x ]; then
+		newlanip=$wanip1.$wanip2.`expr $wanip3 + 1`.1
+		uci set network.lan.ipaddr=$newlanip
+		uci commit
+		/etc/init.d/network reload
+		sleep 10
+	fi
+
+}
+
+connect_ap() {
+	local ssid=$1
+	local encryption=$2
+	local channel=$3
+	local key=$4 #key need to be the last because it can be empty
+
+	echo "gl_health: started to connect to SSID: $ssid with channel $channel"
+
+	local umode
+	local uencryp
+	local security=`echo "$STA_LIST" | grep "$ssid" | awk '{print $5}'`
+
+	uci set wireless.sta.ssid=$ssid
+	uci set wireless.sta.key=$key
+	uci set wireless.sta.encryption=$encryption
+	uci set wireless.mt7628.channel=$channel
+	uci set wireless.sta.disabled=0
+	uci commit wireless
+
+	# /etc/init.d/network restart
+	# sleep 15
+
+	if [ "$security"x = "WPA1PSKWPA2PSK/TKIPAES"x ]; then
+		umode="WPA2PSK"
+		uencryp="AES"
+	elif [ "$security"x = "WPA1PSKWPA2PSK/AES"x ]; then
+		umode="WPA2PSK"
+		uencryp="AES"
+	elif [ "$security"x = "WPA2PSK/TKIPAES"x ]; then
+		umode="WPA2PSK"
+		uencryp="TKIP"
+	elif [ "$security"x = "WPA2PSK/AES"x ]; then
+		umode="WPA2PSK"
+		uencryp="AES"
+	elif [ "$security"x = "WPA2PSK/TKIP"x ]; then
+		umode="WPA2PSK"
+		uencryp="TKIP"
+	elif [ "$security"x = "WPAPSK/TKIPAES"x ]; then
+		umode="WPAPSK"
+		uencryp="TKIP"
+	elif [ "$security"x = "WPAPSK/AES"x ]; then
+		umode="WPAPSK"
+		uencryp="AES"
+	elif [ "$security"x = "NONE"x ]; then
+		umode="OPEN"
+		uencryp="NONE"
+	elif [ "$security"x = "WPAPSK/TKIP"x ]; then
+		umode="WPAPSK"
+		uencryp="TKIP"
+	elif [ "$security"x = "WEP"x ]; then
+		uencryp="WEP"
+		if [ -n "$key" ];then
+			umode="AUTOWEP"
+		else
+			umode="NONE"
+		fi
+	fi
+
+	iwpriv ra0 set Channel=$channel
+	iwpriv apcli0 set ApCliEnable=0
+	iwpriv apcli0 set ApCliAuthMode=$umode
+	iwpriv apcli0 set ApCliEncrypType=$uencryp
+	iwpriv apcli0 set ApCliSsid=$ssid
+	if [ "$security"x = "WEP"x ];then
+		iwpriv apcli0 set ApCliDefaultKeyID=1
+		iwpriv apcli0 set ApCliKey1=$key
+	else
+		iwpriv apcli0 set ApCliWPAPSK=$key
+	fi
+	iwpriv apcli0 set ApCliEnable=1
+	ifconfig apcli0 up
+	sleep 5
+
+	check_sta
+	if [ "$?" == "0" ];then
+		return 0
+	fi
+	return 1
+}
+
+filter_black_list() {
+	local ssid=$1
+	local bad_ssid
+	local blacklist
+
+	blacklist=`cat /tmp/sta_black_list`
+
+	for bad_ssid in $blacklist;do
+		if [ "$bad_ssid"x = "$ssid"x ];then
+			echo 0
+			return 0
+		fi
+	done
+
+	echo 1
+}
+
+match_ssid_cb() {
+	local channel
+	local ssid=$1
+	local encryption=$2
+	local key=$3
+
+	local ret
+
+	ret=$(filter_black_list "$ssid")
+	if [ "$ret" == "0" ];then
+		return 1
+	fi
+
+	find_channel "$ssid" channel
+	if [ "$channel"x == "255"x -o -z "$channel" ];then
+		echo "gl_health: cannot find $ssid active"
+		return 1
+	else
+		echo "gl_health: call connect_ap $ssid $encryption $channel $key"
+		connect_ap $ssid $encryption $channel $key
+		if [ "$?" = "0" ];then
+			return 0
+		else
+			# echo "$ssid" >> /tmp/sta_black_list
+			return 1
+		fi
+	fi
+	return 1
+}
+
+match_ssid() {
+	local i=0
+	while [[ $i -lt 100 ]]; do
+		local network=`uci get ssids.@network[$i]`
+		if [ -z "$network" ]; then
+			return 1
+		fi
+		local ssid=`uci get ssids.@network[$i].ssid`
+		local encryption=`uci get ssids.@network[$i].encryption`
+		local key=`uci get ssids.@network[$i].key`
+		match_ssid_cb $ssid $encryption $key
+		if [ "$?" = "0" ]; then
+			echo "gl_health: we connected sta, have a rest ..."
+			return 0
+		fi
+		i=$((i+1))
+	done
+	return 1
+}
+
+check_network() {
+	local tries=0
+
+	while [[ $tries -lt 3 ]];do
+		if /bin/ping -c 2 8.8.8.8 >/dev/null
+		then
+			return 0
+		fi
+		tries=$((tries+1))
+	done
+
+	return 1
+}
+
+get_upstream_ip() {
+#	local apcli_ip1
+#	local apcli_ip2
+#	local apcli_ip3
+#	local upstream_ip
+
+#	local apcli_info=`ifconfig apcli0`
+#	local apcli_ip=`echo "$apcli_info" | sed -n 's/.*dr:\(.*\) Bc.*/\1/p'`
+#	if [ -n "$apcli_ip" ];then
+#		apcli_ip1=`echo "$apcli_ip" | cut -d. -f1`
+#		apcli_ip2=`echo "$apcli_ip" | cut -d. -f2`
+#		apcli_ip3=`echo "$apcli_ip" | cut -d. -f3`
+#		upstream_ip=$apcli_ip1.$apcli_ip2.$apcli_ip3.1
+#		echo "$upstream_ip"
+#	fi
+	echo $(route|grep default|grep apcli0|awk '{print $2}')
+}
+
+check_sta() {
+	echo "gl_health: checking if sta is connected"
+
+	local _ip
+	local tries=0
+
+	_ip=$(get_upstream_ip)
+	echo "gl_health: gateway IP address is $_ip"
+	if [ -n "$_ip" ];then
+		while [[ $tries -lt 3 ]];do
+			if ping -c 1 -W 2 -I apcli0 $_ip >/dev/null
+			then
+				echo "gl_health: sta connected, no action needed"
+				return 0
+			fi
+			tries=$((tries+1))
+		done
+
+		echo "gl_health: gateway no ping response, try http"
+		#some network disable ping, so we cannot ping anything, use http
+		nc -vz -w5 gl-inet.com 80
+		if [ "$?" = "0" ]; then
+			return 0
+		else
+			echo "gl_health: http try failed"
+		fi
+		ifconfig apcli0 down
+	fi
+	echo "gl_health: sta is not connected"
+
+	return 1
+}
+
+# check_sta(){
+#	sta_disabled=$(uci get wireless.sta.disabled)
+#	if [ "$sta_disabled" = "1" ]; then
+#		echo "sta disabled, no action needed"
+#		return 1 #no need to do anything
+#	fi
+#	sta_ip=$(ifconfig apcli0 |sed -n 's/.*dr:\(.*\) Bc.*/\1/p')
+#	if [ -n "$sta_ip" ]; then
+#		echo "sta connected, no action needed"
+#		return 1
+#	fi
+# 	return 0
+# }
+
+start_run() {
+	check_sta
+	if [ "$?" = "0" ];then
+		return 0
+	fi
+
+	scan_sta
+	match_ssid
+}
+
+while true;do
+	enable_auto=`uci get glconfig.repeater.autoconnect 2>/dev/null`
+	sta_iface=`uci get wireless.sta 2>/dev/null`
+	repeater=`uci get ssids.@network[0] 2>/dev/null`
+	if [ "$enable_auto"x != "1"x ] || \
+		[ "$sta_iface"x != "wifi-iface"x ] || \
+		[ "$repeater"x != "network"x ];then
+		echo "gl_health: no action needed"
+		sleep 5
+		continue
+	else
+		start_run
+	fi
+	sleep 20
+done
+
