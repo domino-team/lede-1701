@@ -16,6 +16,9 @@
 
 #include <asm/mach-ath79/ath79.h>
 #include <asm/mach-ath79/ar71xx_regs.h>
+#include <linux/i2c.h>
+#include <linux/i2c-gpio.h>
+#include <linux/platform_device.h>
 
 #include "common.h"
 #include "dev-ap9x-pci.h"
@@ -36,6 +39,9 @@
 #define GL_AR750AC_GPIO_BTN_RESET	3
 #define GL_AR750AC_GPIO_BTN_LEFT		0
 #define GL_AR750AC_GPIO_BTN_RIGHT	1
+
+#define GL_AR750AC_GPIO_I2C_SCL	16
+#define GL_AR750AC_GPIO_I2C_SDA	17
 
 #define GL_AR750AC_KEYS_POLL_INTERVAL        20  /* msecs */
 #define GL_AR750AC_KEYS_DEBOUNCE_INTERVAL    (3 * GL_AR750AC_KEYS_POLL_INTERVAL)
@@ -119,6 +125,20 @@ static struct ath79_spi_platform_data gl_ar750ac_spi_data = {
     .num_chipselect     = 2,
 };
 
+static struct i2c_gpio_platform_data gl_ar750ac_i2c_gpio_data = {
+	.sda_pin	= GL_AR750AC_GPIO_I2C_SDA,
+	.scl_pin	= GL_AR750AC_GPIO_I2C_SCL,
+};
+
+static struct platform_device gl_ar750ac_i2c_gpio_device = {
+	.name		= "i2c-gpio",
+	.id		= 0,
+	.dev = {
+		.platform_data  = &gl_ar750ac_i2c_gpio_data,
+	}
+};
+
+
 static void __init gl_ar750ac_setup(void)
 {
     u8 *art = (u8 *) KSEG1ADDR(0x1fff0000);
@@ -155,7 +175,8 @@ static void __init gl_ar750ac_setup(void)
 
     ath79_init_mac(tmpmac, art + GL_AR750AC_WMAC_CALDATA_OFFSET + 2, 0);
     ath79_register_wmac(art + GL_AR750AC_WMAC_CALDATA_OFFSET, tmpmac);
-
+	/*register i2c*/
+	platform_device_register(&gl_ar750ac_i2c_gpio_device);
     /* enable usb */
     ath79_register_usb();
     /* enable pci */
