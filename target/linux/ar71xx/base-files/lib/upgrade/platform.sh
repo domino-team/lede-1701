@@ -572,7 +572,7 @@ platform_check_image() {
 		cybertan_check_image "$1" && return 0
 		return 1
 		;;
-	gl-ar750ac|\
+	gl-ar750|\
 	gl-ar300m)
 		platform_check_image_gl_ar300m "$1" "$board" "$magic" && return 0
 		return 1
@@ -649,7 +649,7 @@ platform_pre_upgrade() {
 	local board=$(ar71xx_board_name)
 
 	case "$board" in
-	gl-ar750ac|\
+	gl-ar750|\
 	gl-ar300m)
 		platform_pre_upgrade_gl_ar300m "$1"
 		;;

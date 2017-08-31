@@ -680,8 +680,8 @@ config ATH79_MACH_GL_AR300M
 	select ATH79_DEV_USB
 	select ATH79_DEV_WMAC
 
-config ATH79_MACH_GL_AR750AC
-	bool "GL_AR750AC support"
+config ATH79_MACH_GL_AR750
+	bool "GL_AR750 support"
 	select SOC_QCA953X
 	select ATH79_DEV_ETH
 	select ATH79_DEV_GPIO_BUTTONS

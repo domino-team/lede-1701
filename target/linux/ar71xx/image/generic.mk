@@ -148,15 +148,15 @@ define Device/gl-ar300m
 endef
 TARGET_DEVICES += gl-ar300m
 
-define Device/gl-ar750ac
-  DEVICE_TITLE := GL AR750AC
+define Device/gl-ar750
+  DEVICE_TITLE := GL AR750
   DEVICE_PACKAGES := kmod-usb-core kmod-usb2 uboot-envtools
-  BOARDNAME = GL-AR750AC
+  BOARDNAME = GL-AR750
   IMAGE_SIZE = 16000k
   CONSOLE = ttyS0,115200
   MTDPARTS = spi0.0:256k(u-boot)ro,64k(u-boot-env),16000k(firmware),64k(art)ro
 endef
-TARGET_DEVICES += gl-ar750ac
+TARGET_DEVICES += gl-ar750
 
 define Device/gl-domino
   DEVICE_TITLE := GL Domino Pi

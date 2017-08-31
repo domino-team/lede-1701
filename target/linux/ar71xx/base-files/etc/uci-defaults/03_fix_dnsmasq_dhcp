@@ -18,7 +18,7 @@ config_dnsmasq_dhcp()
 board=$(ar71xx_board_name)
 
 case "$board" in
-	gl-ar750ac)
+	gl-ar750)
 	config_dnsmasq_dhcp
 	;;
 *)
