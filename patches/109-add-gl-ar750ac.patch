@@ -1,7 +1,7 @@
-Index: lede-1701/target/linux/ar71xx/base-files/etc/board.d/01_leds
+Index: lede-ar750/target/linux/ar71xx/base-files/etc/board.d/01_leds
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/base-files/etc/board.d/01_leds
-+++ lede-1701/target/linux/ar71xx/base-files/etc/board.d/01_leds
+--- lede-ar750.orig/target/linux/ar71xx/base-files/etc/board.d/01_leds
++++ lede-ar750/target/linux/ar71xx/base-files/etc/board.d/01_leds
 @@ -275,6 +275,10 @@ dlan-pro-1200-ac)
  	ucidef_set_led_gpio "plcw" "dLAN" "devolo:status:dlan" "17" "0"
  	ucidef_set_led_gpio "plcr" "dLAN" "devolo:error:dlan" "16" "0"
@@ -13,10 +13,10 @@ Index: lede-1701/target/linux/ar71xx/base-files/etc/board.d/01_leds
  gl-ar150|\
  gl-ar300|\
  gl-ar300m|\
-Index: lede-1701/target/linux/ar71xx/base-files/etc/board.d/02_network
+Index: lede-ar750/target/linux/ar71xx/base-files/etc/board.d/02_network
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/base-files/etc/board.d/02_network
-+++ lede-1701/target/linux/ar71xx/base-files/etc/board.d/02_network
+--- lede-ar750.orig/target/linux/ar71xx/base-files/etc/board.d/02_network
++++ lede-ar750/target/linux/ar71xx/base-files/etc/board.d/02_network
 @@ -124,6 +124,7 @@ ar71xx_setup_interfaces()
  	alfa-nx|\
  	gl-ar150|\
@@ -25,10 +25,10 @@ Index: lede-1701/target/linux/ar71xx/base-files/etc/board.d/02_network
  	gl-domino|\
  	gl-inet|\
  	gl-mifi|\
-Index: lede-1701/target/linux/ar71xx/base-files/etc/diag.sh
+Index: lede-ar750/target/linux/ar71xx/base-files/etc/diag.sh
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/base-files/etc/diag.sh
-+++ lede-1701/target/linux/ar71xx/base-files/etc/diag.sh
+--- lede-ar750.orig/target/linux/ar71xx/base-files/etc/diag.sh
++++ lede-ar750/target/linux/ar71xx/base-files/etc/diag.sh
 @@ -475,6 +475,7 @@ set_state() {
  	done)
  		status_led_on
@@ -37,10 +37,10 @@ Index: lede-1701/target/linux/ar71xx/base-files/etc/diag.sh
  		gl-ar300m)
  			fw_printenv lc >/dev/null 2>&1 && fw_setenv "bootcount" 0
  			;;
-Index: lede-1701/target/linux/ar71xx/base-files/lib/ar71xx.sh
+Index: lede-ar750/target/linux/ar71xx/base-files/lib/ar71xx.sh
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/base-files/lib/ar71xx.sh
-+++ lede-1701/target/linux/ar71xx/base-files/lib/ar71xx.sh
+--- lede-ar750.orig/target/linux/ar71xx/base-files/lib/ar71xx.sh
++++ lede-ar750/target/linux/ar71xx/base-files/lib/ar71xx.sh
 @@ -626,6 +626,9 @@ ar71xx_board_detect() {
  	*"GL-AR300M")
  		name="gl-ar300m"
@@ -51,10 +51,10 @@ Index: lede-1701/target/linux/ar71xx/base-files/lib/ar71xx.sh
  	*"GL-MIFI")
  		name="gl-mifi"
  		;;
-Index: lede-1701/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
+Index: lede-ar750/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
-+++ lede-1701/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
+--- lede-ar750.orig/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
++++ lede-ar750/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
 @@ -572,6 +572,7 @@ platform_check_image() {
  		cybertan_check_image "$1" && return 0
  		return 1
@@ -71,10 +71,10 @@ Index: lede-1701/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
  	gl-ar300m)
  		platform_pre_upgrade_gl_ar300m "$1"
  		;;
-Index: lede-1701/target/linux/ar71xx/config-4.4
+Index: lede-ar750/target/linux/ar71xx/config-4.4
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/config-4.4
-+++ lede-1701/target/linux/ar71xx/config-4.4
+--- lede-ar750.orig/target/linux/ar71xx/config-4.4
++++ lede-ar750/target/linux/ar71xx/config-4.4
 @@ -104,6 +104,7 @@ CONFIG_ATH79_MACH_F9K1115V2=y
  CONFIG_ATH79_MACH_GL_AR150=y
  CONFIG_ATH79_MACH_GL_AR300=y
@@ -97,10 +97,10 @@ Index: lede-1701/target/linux/ar71xx/config-4.4
  CONFIG_MTD_SPINAND_ONDIEECC=y
  CONFIG_MTD_SPI_NOR=y
  CONFIG_MTD_SPLIT_FIRMWARE=y
-Index: lede-1701/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
+Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
-+++ lede-1701/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
+--- lede-ar750.orig/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
++++ lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
 @@ -680,6 +680,16 @@ config ATH79_MACH_GL_AR300M
  	select ATH79_DEV_USB
  	select ATH79_DEV_WMAC
@@ -118,10 +118,10 @@ Index: lede-1701/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
  config ATH79_MACH_GL_DOMINO
  	bool "DOMINO support"
  	select SOC_AR933X
-Index: lede-1701/target/linux/ar71xx/files/arch/mips/ath79/Makefile
+Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Makefile
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/files/arch/mips/ath79/Makefile
-+++ lede-1701/target/linux/ar71xx/files/arch/mips/ath79/Makefile
+--- lede-ar750.orig/target/linux/ar71xx/files/arch/mips/ath79/Makefile
++++ lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Makefile
 @@ -108,6 +108,7 @@ obj-$(CONFIG_ATH79_MACH_F9K1115V2)		+= m
  obj-$(CONFIG_ATH79_MACH_GL_AR150)		+= mach-gl-ar150.o
  obj-$(CONFIG_ATH79_MACH_GL_AR300)		+= mach-gl-ar300.o
@@ -130,10 +130,10 @@ Index: lede-1701/target/linux/ar71xx/files/arch/mips/ath79/Makefile
  obj-$(CONFIG_ATH79_MACH_GL_DOMINO)		+= mach-gl-domino.o
  obj-$(CONFIG_ATH79_MACH_GL_INET)		+= mach-gl-inet.o
  obj-$(CONFIG_ATH79_MACH_GL_MIFI)		+= mach-gl-mifi.o
-Index: lede-1701/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
+Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
-+++ lede-1701/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
+--- lede-ar750.orig/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
++++ lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
 @@ -99,6 +99,7 @@ enum ath79_mach_type {
  	ATH79_MACH_GL_AR150,			/* GL-AR150 support */
  	ATH79_MACH_GL_AR300,			/* GL-AR300 */
@@ -142,10 +142,10 @@ Index: lede-1701/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
  	ATH79_MACH_GL_DOMINO,			/* Domino */
  	ATH79_MACH_GL_INET,			/* GL-CONNECT GL-INET */
  	ATH79_MACH_GL_MIFI,			/* GL-MIFI support */
-Index: lede-1701/target/linux/ar71xx/image/generic.mk
+Index: lede-ar750/target/linux/ar71xx/image/generic.mk
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/image/generic.mk
-+++ lede-1701/target/linux/ar71xx/image/generic.mk
+--- lede-ar750.orig/target/linux/ar71xx/image/generic.mk
++++ lede-ar750/target/linux/ar71xx/image/generic.mk
 @@ -148,6 +148,16 @@ define Device/gl-ar300m
  endef
  TARGET_DEVICES += gl-ar300m
@@ -163,25 +163,25 @@ Index: lede-1701/target/linux/ar71xx/image/generic.mk
  define Device/gl-domino
    DEVICE_TITLE := GL Domino Pi
    DEVICE_PACKAGES := kmod-usb-core kmod-usb2
-Index: lede-1701/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
+Index: lede-ar750/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
 ===================================================================
---- lede-1701.orig/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
-+++ lede-1701/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
+--- lede-ar750.orig/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
++++ lede-ar750/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
 @@ -67,6 +67,10 @@ case "$FIRMWARE" in
  		ath10kcal_extract "art" 20480 2116
  		ath10kcal_patch_mac $(mtd_get_mac_binary art 18)
  		;;
 +	gl-ar750)
 +		ath10kcal_extract "art" 20480 2116
-+		ath10kcal_patch_mac $(mtd_get_mac_binary art 0)
++		ath10kcal_patch_mac $(macaddr_add $(mtd_get_mac_binary art 0) +1)
 +		;;	
  	epg5000 | \
  	esr1750)
  		ath10kcal_extract "caldata" 20480 2116
-Index: lede-1701/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq_dhcp
+Index: lede-ar750/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq_dhcp
 ===================================================================
 --- /dev/null
-+++ lede-1701/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq_dhcp
++++ lede-ar750/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq_dhcp
 @@ -0,0 +1,30 @@
 +#!/bin/sh
 +#
@@ -213,10 +213,10 @@ Index: lede-1701/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq_
 +
 +exit 0
 +
-Index: lede-1701/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
+Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
 ===================================================================
 --- /dev/null
-+++ lede-1701/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
++++ lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
 @@ -0,0 +1,187 @@
 +/*
 + *  GLI AR750 board support
@@ -253,8 +253,8 @@ Index: lede-1701/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
 +#include "pci.h"
 +
 +#define GL_AR750_GPIO_LED_USB		2
-+#define GL_AR750_GPIO_LED_WLAN		14
-+#define GL_AR750_GPIO_LED_LAN		13
++#define GL_AR750_GPIO_LED_WLAN		13
++#define GL_AR750_GPIO_LED_LAN		14
 +#define GL_AR750_GPIO_LED_SYSTEM	12
 +#define GL_AR750_GPIO_BTN_RESET	3
 +#define GL_AR750_GPIO_BTN_LEFT		0
