@@ -169,10 +169,6 @@
 +	ralink,mtd-eeprom = <&factory 0x4>;
 +};
 +
-+&i2c {
-+	status = "okay";
-+};
-+
 +&spi0 {
 +	status = "okay";
 +
@@ -220,14 +216,18 @@
 +&ohci {
 +	status = "okay";
 +};
---- a/target/linux/ramips/mt7628/target.mk
-+++ b/target/linux/ramips/mt7628/target.mk
-@@ -7,7 +7,7 @@ BOARDNAME:=MT7628 based boards
- FEATURES+=usb
- CPU_TYPE:=24kc
++
++&esw {
++	mediatek,portmap = "wllll";
++};
+--- a/target/linux/ramips/base-files/lib/preinit/07_set_preinit_iface_ramips
++++ b/target/linux/ramips/base-files/lib/preinit/07_set_preinit_iface_ramips
+@@ -19,7 +19,7 @@ ramips_set_preinit_iface() {
+ 			;;
+ 		esac
+ 		swconfig dev $ralink_switchdev set reset 1
+-		swconfig dev $ralink_switchdev set enable_vlan 1
++		swconfig dev $ralink_switchdev set enable_vlan 0
+ 		swconfig dev $ralink_switchdev set apply 1
+ 	fi
  
--DEFAULT_PACKAGES += kmod-mt76
-+DEFAULT_PACKAGES += mt7628-binary
- 
- define Target/Description
- 	Build firmware images for Ralink MT7628 based boards.

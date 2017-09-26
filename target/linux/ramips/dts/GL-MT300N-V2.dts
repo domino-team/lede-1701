@@ -94,10 +94,6 @@
 	ralink,mtd-eeprom = <&factory 0x4>;
 };
 
-&i2c {
-	status = "okay";
-};
-
 &spi0 {
 	status = "okay";
 
@@ -144,4 +140,8 @@
 
 &ohci {
 	status = "okay";
+};
+
+&esw {
+	mediatek,portmap = "wllll";
 };
