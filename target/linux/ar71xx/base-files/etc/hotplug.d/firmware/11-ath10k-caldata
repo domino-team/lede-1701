@@ -69,7 +69,7 @@ case "$FIRMWARE" in
 		;;
 	gl-ar750)
 		ath10kcal_extract "art" 20480 2116
-		ath10kcal_patch_mac $(mtd_get_mac_binary art 0)
+		ath10kcal_patch_mac $(macaddr_add $(mtd_get_mac_binary art 0) +1)
 		;;	
 	epg5000 | \
 	esr1750)
