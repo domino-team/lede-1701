@@ -100,6 +100,14 @@ proto_qmi_setup() {
 	uqmi -s -d "$device" --wda-set-data-format 802.3
 	uqmi -s -d "$device" --sync
 
+	if uqmi -s -d "$device" --wda-get-data-format | grep raw > /dev/null; then
+		if [ ! -w "/sys/class/net/$ifname/qmi/raw_ip" ]; then
+			echo "Unable to set data format and raw_ip unsupported"
+			return 1
+		fi
+	    echo Y >"/sys/class/net/$ifname/qmi/raw_ip"
+	fi
+
 	echo "Waiting for network registration"
 	while uqmi -s -d "$device" --get-serving-system | grep '"searching"' > /dev/null; do
 		sleep 5;
