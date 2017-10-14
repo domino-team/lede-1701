@@ -9,6 +9,8 @@ config_dnsmasq_dhcp()
 {
 		uci set dhcp.@dhcp[0].force=1
 		uci commit dhcp
+		uci set wireless.radio0.doth=0
+		uci commit wireless
 }
 
 

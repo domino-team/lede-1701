@@ -53,7 +53,7 @@
 
 static struct gpio_led gl_ar750_leds_gpio[] __initdata = {
     {
-        .name = "gl-ar750:usb",
+        .name = "gl-ar750:usbpow",
         .gpio = GL_AR750_GPIO_LED_USB,
         .active_low = 0,
         .default_state = 1,
