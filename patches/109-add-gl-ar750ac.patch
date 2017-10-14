@@ -182,7 +182,7 @@ Index: lede-ar750/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq
 ===================================================================
 --- /dev/null
 +++ lede-ar750/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq_dhcp
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,32 @@
 +#!/bin/sh
 +#
 +# Copyright (C) 2013 OpenWrt.org
@@ -194,6 +194,8 @@ Index: lede-ar750/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq
 +{
 +		uci set dhcp.@dhcp[0].force=1
 +		uci commit dhcp
++		uci set wireless.radio0.doth=0
++		uci commit wireless
 +}
 +
 +
@@ -273,7 +275,7 @@ Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
 +
 +static struct gpio_led gl_ar750_leds_gpio[] __initdata = {
 +    {
-+        .name = "gl-ar750:usb",
++        .name = "gl-ar750:usbpow",
 +        .gpio = GL_AR750_GPIO_LED_USB,
 +        .active_low = 0,
 +        .default_state = 1,
