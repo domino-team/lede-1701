@@ -71,12 +71,16 @@ endef
 define Build/Configure
 endef
 
+ifeq ($(CONFIG_TARGET_ramips_mt7628),y)
+IWINFO_BACKENDS := \
+	$(if $(CONFIG_TARGET_ramips),rt)
+else
 IWINFO_BACKENDS := \
 	$(if $(CONFIG_PACKAGE_kmod-brcm-wl),wl) \
 	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mini),wl) \
 	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mimo),wl) \
-	$(if $(CONFIG_PACKAGE_kmod-cfg80211),nl80211) \
-	$(if $(CONFIG_TARGET_ramips),rt)
+	$(if $(CONFIG_PACKAGE_kmod-cfg80211),nl80211)
+endif
 
 TARGET_CFLAGS += \
 	-I$(STAGING_DIR)/usr/include/libnl-tiny \
