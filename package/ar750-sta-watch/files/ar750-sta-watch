@@ -1,0 +1,20 @@
+#!/bin/sh /etc/rc.common
+
+
+START=36
+start()
+{
+     sta-watch &
+}
+
+stop()
+{
+    killall sta-watch
+}
+
+restart()
+{
+	stop
+	sleep 1
+	start
+}

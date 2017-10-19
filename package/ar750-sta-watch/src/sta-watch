@@ -1,0 +1,89 @@
+#!/bin/sh
+
+
+. /lib/functions.sh
+
+fail_c=3
+iface="wwan"
+
+device=""
+gateway=""
+up="false"
+pending="true"
+
+is_ac_device()
+{	
+	up="$( ifstatus $iface|grep \"up\": |awk -F [\ ,] '{print $2}' )"
+	pending="$( ifstatus $iface|grep pending |awk -F [\ ,] '{print $2}' )"
+	device="$( uci get wireless.sta.device 2>/dev/null )"
+	gateway="$( ifstatus $iface|grep  target|grep -v "0.0.0.0"|awk -F '[""]' '{print $4}' 2>/dev/null )"	
+	
+	
+	if [ "$device" = "radio0" ] && [  "$up" = "true" ] && [ "$pending" = "false" ] && [ "$gateway" != "" ] ;then
+		return 0
+	else
+		return 1
+	fi
+}
+
+ping_test()
+{
+out=0
+	while [ 1 ]
+	do
+		ping $gateway -c 1 -w 1 2>&1 >/dev/null
+		if [ $? != 0 ] ;then
+			let out=out+1
+			if [ $out -gt $fail_c ];then 
+			#echo "ping failed"
+			return 1
+			fi
+		else
+			out=0
+			sleep 1
+		fi
+	done
+}
+
+scan_53_port()
+{
+out=0
+	while [ 1 ]
+	do
+		nc -zw  1 $gateway  53 2>&1 >/dev/null
+		if [ $? != 0 ] ;then
+			let out=out+1
+			if [ $out -gt $fail_c ];then 
+			return 1
+			fi
+		else
+			out=0
+			sleep 1
+		fi
+	done
+}
+
+while [ 1 ]
+do
+
+is_ac_device
+if [ $? = 0 ];then
+	echo "watch ..."
+	scan_53_port
+fi
+
+is_ac_device
+if [ $?  = 0 ];then
+	wpa_cli flush
+	echo "$iface disconnect"
+fi
+
+	device=""
+	gateway=""
+	up="false"
+	pending="true"
+sleep 5	
+
+done
+
+
