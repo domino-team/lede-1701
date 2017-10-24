@@ -8,6 +8,7 @@ iface="wwan"
 
 device=""
 gateway=""
+dns_server=""
 up="false"
 pending="true"
 
@@ -17,9 +18,9 @@ is_ac_device()
 	pending="$( ifstatus $iface|grep pending |awk -F [\ ,] '{print $2}' )"
 	device="$( uci get wireless.sta.device 2>/dev/null )"
 	gateway="$( ifstatus $iface|grep  target|grep -v "0.0.0.0"|awk -F '[""]' '{print $4}' 2>/dev/null )"	
+	dns_server="$( ifstatus wwan|awk   '/dns-server/,/]/{print}'|grep "\."|cut -d '"' -f 2 )"
 	
-	
-	if [ "$device" = "radio0" ] && [  "$up" = "true" ] && [ "$pending" = "false" ] && [ "$gateway" != "" ] ;then
+	if [ "$device" = "radio0" ] && [  "$up" = "true" ] && [ "$pending" = "false" ] && [ "$gateway" != "" ] && [ "$dns_server" != "" ] ;then
 		return 0
 	else
 		return 1
@@ -50,7 +51,7 @@ scan_53_port()
 out=0
 	while [ 1 ]
 	do
-		nc -zw  1 $gateway  53 2>&1 >/dev/null
+		nc -zw  1 $dns_server  53 2>&1 >/dev/null
 		if [ $? != 0 ] ;then
 			let out=out+1
 			if [ $out -gt $fail_c ];then 
@@ -80,6 +81,7 @@ fi
 
 	device=""
 	gateway=""
+	dns_server=""
 	up="false"
 	pending="true"
 sleep 5	
