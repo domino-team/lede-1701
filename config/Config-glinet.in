@@ -163,7 +163,7 @@ menu "Gl.iNet package choice shortcut"
 		bool "Support shadowsocks etc"
 		select PACKAGE_shadowsocks-libev
 		select PACKAGE_shadowsocks-libev-server
-		select PACKAGE_luci-app-chinadns
+	#	select PACKAGE_luci-app-chinadns
 		select PACKAGE_luci-app-dns-forwarder
 		select PACKAGE_luci-app-shadowsocks
 		help

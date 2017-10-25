@@ -141,7 +141,7 @@ static struct platform_device gl_ar750_i2c_gpio_device = {
 
 static void __init gl_ar750_setup(void)
 {
-    u8 *art = (u8 *) KSEG1ADDR(0x1fff0000);
+    u8 *art = (u8 *) KSEG1ADDR(0x1f050000);
     u8 tmpmac[ETH_ALEN];
 
     ath79_gpio_function_enable(AR934X_GPIO_FUNC_JTAG_DISABLE);
@@ -165,7 +165,7 @@ static void __init gl_ar750_setup(void)
     ath79_register_eth(0);
 
     /* LAN */
-    ath79_init_mac(ath79_eth1_data.mac_addr, art + GL_AR750_MAC1_OFFSET, 1);
+    ath79_init_mac(ath79_eth1_data.mac_addr, art + GL_AR750_MAC0_OFFSET, 1);
     ath79_eth1_data.phy_if_mode = PHY_INTERFACE_MODE_GMII;
     ath79_eth1_data.speed = SPEED_1000;
     ath79_eth1_data.duplex = DUPLEX_FULL;
