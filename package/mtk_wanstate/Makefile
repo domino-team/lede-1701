@@ -17,8 +17,15 @@ define Package/mtk_wanstate
   SECTION:=base
   CATEGORY:=gl-inet
   TITLE:=Change wan port status for MediaTek chip
-  DEPENDS:=@TARGET_ramips
+  DEPENDS:=@TARGET_ramips +libnl-tiny
 endef
+
+TARGET_CPPFLAGS := \
+	-D_GNU_SOURCE \
+	-I$(STAGING_DIR)/usr/include/libnl-tiny \
+	-I$(PKG_BUILD_DIR) \
+	$(TARGET_CPPFLAGS) \
+	-I$(LINUX_DIR)/user_headers/include
 
 define Package/mtk_wanstate/description
 This program to fix wan port state for MediaTek chip, it can't
@@ -29,6 +36,12 @@ endef
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) ./src/* $(PKG_BUILD_DIR)
+endef
+
+define Build/Compile
+	CFLAGS="$(TARGET_CPPFLAGS) $(TARGET_CFLAGS)" \
+	$(MAKE) -C $(PKG_BUILD_DIR) \
+		$(TARGET_CONFIGURE_OPTS)
 endef
 
 define Package/mtk_wanstate/install
