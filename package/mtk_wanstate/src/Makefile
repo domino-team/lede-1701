@@ -1,7 +1,7 @@
 #CFLAGS += $(shell pkg-config --cflags json-c)
 #LDFLAGS += $(shell pkg-config --libs json-c) -luci
 # LDFLAGS +=-ljson-c -luci -lglutil
-LDFLAGS +=
+LDFLAGS +=-lsw -lnl-tiny
 
 PROC=mtk_wanstate
 SRC=$(wildcard *.c)

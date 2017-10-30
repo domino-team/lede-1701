@@ -1,23 +1,22 @@
-#include <linux/types.h>
-#include <linux/netlink.h>
-#include <linux/rtnetlink.h>
-#include <net/if.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <syslog.h>
 #include <time.h>
+#include <inttypes.h>
+#include <stdint.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
-struct nl_request {
-	struct nlmsghdr  nh;
-	struct ifinfomsg ifi;
-	char attrbuf[4096];
-};
+#include <linux/types.h>
+#include <linux/netlink.h>
+#include <linux/genetlink.h>
+#include <netlink/netlink.h>
+#include <netlink/genl/genl.h>
+#include <netlink/genl/ctrl.h>
+#include <linux/switch.h>
+#include <swlib.h>
 
 static int use_syslog;
 
@@ -55,305 +54,126 @@ static int use_syslog;
         } }                                                                       \
     while (0)
 
-void daemonize(const char *path)
+/**
+ * @return: -1 = error, 1 = link up, 0 = link down
+ */
+int probe_port_status(struct switch_dev *dev, int port)
 {
-    /* Our process ID and Session ID */
-    pid_t pid, sid;
+	int ret = 0;
+	struct switch_val val;
+	struct switch_attr *attr;
+	struct switch_port_link *link;
 
-    /* Fork off the parent process */
-    pid = fork();
-    if (pid < 0) {
-        exit(EXIT_FAILURE);
-    }
-
-    /* If we got a good PID, then
-     * we can exit the parent process. */
-    if (pid > 0) {
-        FILE *file = fopen(path, "w");
-        if (file == NULL) {
-			exit(EXIT_FAILURE);
-        }
-
-        fprintf(file, "%d", (int)pid);
-        fclose(file);
-        exit(EXIT_SUCCESS);
-    }
-
-    /* Change the file mode mask */
-    umask(0);
-
-    /* Open any logs here */
-
-    /* Create a new SID for the child process */
-    sid = setsid();
-    if (sid < 0) {
-        /* Log the failure */
-        exit(EXIT_FAILURE);
-    }
-
-    /* Change the current working directory */
-    if ((chdir("/")) < 0) {
-        /* Log the failure */
-        exit(EXIT_FAILURE);
-    }
-
-    /* Close out the standard file descriptors */
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
-}
-
-/* Utility function for parse rtattr. */
-static void 
-netlink_parse_rtattr (struct rtattr **tb, int max, struct rtattr *rta, int len)
-{
-    while (RTA_OK (rta, len))
-    {
-	if (rta->rta_type <= max)
-	    tb[rta->rta_type] = rta;
-	rta = RTA_NEXT (rta, len);
-    }
-}
-
-/* Recieving netlink message. */
-void netlink_recv(int nsock) 
-{
-    char buf[4096];
-    struct iovec iov = { buf, sizeof(buf) };
-    struct sockaddr_nl snl;
-    struct msghdr msg = { (void*)&snl, sizeof(snl), &iov, 1, NULL, 0, 0};
-    struct nlmsghdr *h;
-    struct rtattr *tb[IFLA_MAX > IFA_MAX ? IFLA_MAX : IFA_MAX + 1];
-    struct ifinfomsg *ifi;
-    struct nlmsgerr *err;
-
-    int status = recvmsg(nsock, &msg, 0);
-
-	if(status < 0) {
-		LOGI("recvmsg(nsock) fail");
-		return;
-	} else if (status == 0) {
-		LOGI("recvmsg(nsock): received zero sizenetlink message");
-		return;
+	if (!dev || port < 0 || port > 6) {
+		LOGE("Invalid port or dev specified");
+		return -1;
 	}
 
-	if(msg.msg_namelen != sizeof(snl)){
-		LOGI("recvmsg(nsock): received invalid netlink message");
-		return;
+	/* get link attribute */
+	attr = swlib_lookup_attr(dev, SWLIB_ATTR_GROUP_PORT, "link");
+	if (!attr) {
+		LOGE("Unknown attribute");
+		return -1;
 	}
 
-	if(msg.msg_flags & MSG_TRUNC){
-		LOGI("recvmsg(nsock): received truncated netlink message");
-		return;
+	/* specific port */
+	val.port_vlan = port;
+
+	ret = swlib_get_attr(dev, attr, &val);
+	if (ret < 0) {
+		LOGE("Failed to get attribute");
+		return -1;
 	}
 
-	for(h = (struct nlmsghdr *) buf; NLMSG_OK(h, status); h = NLMSG_NEXT (h, status)) {
-
-		switch(h->nlmsg_type) {
-			case NLMSG_DONE:
-				return;
-			case NLMSG_ERROR:
-				err = (struct nlmsgerr *) NLMSG_DATA(h);
-				if (h->nlmsg_len < NLMSG_LENGTH(sizeof(struct nlmsgerr))) {
-					LOGI("received error message with invalid length");
-					return;
-				}
-				return;
-			case RTM_NEWLINK:
-			case RTM_DELLINK:
-				ifi = NLMSG_DATA(h);;
-
-				int len = h->nlmsg_len - NLMSG_LENGTH(sizeof(struct ifinfomsg));
-				char ifname[IF_NAMESIZE+1];
-				if(len < 0)
-					continue;
-
-				memset(tb, 0, sizeof(tb));
-				netlink_parse_rtattr(tb, IFLA_MAX, IFLA_RTA(ifi), len);
-
-				if(tb[IFLA_IFNAME] == NULL)
-					continue;
-
-				strncpy(ifname, (char *)RTA_DATA(tb[IFLA_IFNAME]), IF_NAMESIZE);
-
-				switch (h->nlmsg_type) {
-					case RTM_NEWLINK:
-						if (ifi->ifi_flags & IFF_RUNNING) {
-							/* ifname up */
-							/* TODO */
-						} else {
-							/* ifname down */
-							if (!strncmp(ifname, "eth0", strlen("eth0"))) {
-								system("killall -16 udhcpc");
-							}
-							printf("interface %s(%d): down\n", ifname, ifi->ifi_index);
-						}
-#if 0
-						if(ifi->ifi_flags & IFF_RUNNING){
-							printf("interface %s(%d): UP\n", 
-									ifname, ifi->ifi_index);
-						} else {
-							printf("interface %s(%d): DOWN\n", 
-									ifname, ifi->ifi_index);
-						}
-						break;
-					case RTM_DELLINK:
-						printf("interface %s(%d): REMOVED\n", 
-								ifname, ifi->ifi_index);
-						break;
-#endif
-				}
-				break;
-			default:
-				continue;
+	if (attr->type == SWITCH_TYPE_LINK) {
+		link = val.value.link;
+		if(link->link) {
+			return 1;
+		} else {
+			return 0;
 		}
 	}
+
+	return ret;
 }
 
-#if 0
-/* Make the kernel send us an RTM_NEWLINK for all interfaces */
-void netlink_getlink(int nsock) 
+void print_usage() 
 {
-    struct nlmsghdr *n;
-    struct ifinfomsg *ifi;
-    u_int8_t req[sizeof(struct nlmsghdr) + sizeof(struct ifinfomsg) +
-		 sizeof(struct ifaddrmsg) + 4096];
-
-    memset(&req, 0, sizeof(req));
-    n = (struct nlmsghdr*) req;
-    n->nlmsg_len = NLMSG_LENGTH(sizeof(*ifi));
-    n->nlmsg_type = RTM_GETLINK;
-    n->nlmsg_seq = 1;
-    n->nlmsg_flags = NLM_F_ROOT | NLM_F_MATCH | NLM_F_REQUEST;
-    n->nlmsg_pid = 0;
-
-    ifi = NLMSG_DATA(n);
-    ifi->ifi_family = AF_UNSPEC;
-    ifi->ifi_change = -1;
-
-    if (send(nsock, n, n->nlmsg_len, 0) < 0) {
-	LOGI("send");
-	exit(1);
-    }    
+	printf("Usage: wanstate [-d <switch_dev>] [-p <port>] [-h]\n\n");
+	exit(EXIT_FAILURE);
 }
-#endif
 
-int main(int argc, char **argv) {
-	/* netlink */
-	struct nl_request req;
-    struct sockaddr_nl nl_addr;
-	struct rtattr *rta = NULL;
-	unsigned int mtu = 1000;
-
-	/* sock */
-    int nsock = 0;
-
-	/* select */
-    fd_set r;
-	
-	/* other */
-	int ret = 0;
+int main(int argc, char **argv)
+{
 	int c = 0;
-	int pid_flags = 0;
-    char *pid_path  = NULL;
+	int ret = 0;
+	int port = 0;
+	int cur_status = 0;
+	int port_status = 0;
+	char *cdev = NULL;
 
-    opterr = 0;
+	struct switch_dev *dev;
 
-	while ((c = getopt(argc, argv, "f:")) != -1) {
+	while ((c = getopt(argc, argv, "d:p:h")) != -1) {
 		switch (c) {
-		case 'f':
-			pid_flags = 1;
-			pid_path = optarg;
+		case 'd':
+			cdev = optarg;
+			break;
+		case 'p':
+			port = atoi(optarg);
+			break;
+		case 'h':
+			print_usage();
 			break;
 		case '?':
-			LOGE("Unrecognized option: %s", optarg);
-            opterr = 1;
+			/* LOGE("Unrecognized option: %s", optarg); */
+			print_usage();
 			break;
 		}
 	}
 
-    if (opterr) {
-        exit(EXIT_FAILURE);
-    }
-
-	if (pid_flags) {
-		/* run in background */
-		USE_SYSLOG(argv[0]);
-		daemonize(pid_path);
+	if (!cdev) {
+		cdev = strdup("switch0");
 	}
 
-    /* initialize netlink socket */
-	nsock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
-    if(nsock < 0) {
-		LOGE("socket");
-		return -1;
-    }
+	/* port 0 is wan by default */
+	port = port?port:0;
 
-    memset(&nl_addr, 0, sizeof(nl_addr));
+	/* enable syslog */
+	USE_SYSLOG(argv[0]);
 
-    nl_addr.nl_family = AF_NETLINK;
-    nl_addr.nl_groups = RTMGRP_LINK;
-    nl_addr.nl_pid = getpid();
-
-	ret = bind(nsock, (struct sockaddr *) &nl_addr, sizeof(nl_addr));
-    if (ret < 0) {
-		LOGE("bind");
-		goto out;
-    }
-
-	memset(&req, 0, sizeof(req));
-
-	/* man 3 rtnetlink for detail */
-	req.nh.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg));
-	req.nh.nlmsg_flags = NLM_F_REQUEST;
-	req.nh.nlmsg_type = RTM_NEWLINK;
-	req.ifi.ifi_family = AF_UNSPEC;
-	req.ifi.ifi_change = 0xffffffff;
-	rta = (struct rtattr *)(((char *)&req) + NLMSG_ALIGN(req.nh.nlmsg_len));
-	rta->rta_type = IFLA_MTU;
-	rta->rta_len = RTA_LENGTH(sizeof(unsigned int));
-	req.nh.nlmsg_len = NLMSG_ALIGN(req.nh.nlmsg_len) + RTA_LENGTH(sizeof(mtu));
-	memcpy(RTA_DATA(rta), &mtu, sizeof(mtu));
-
-	ret = send(nsock, &req, req.nh.nlmsg_len, 0);
-	if (ret < 0) {
-		LOGE("send");
-		goto out;
+	dev = swlib_connect(cdev);
+	if (!dev) {
+		LOGE("Failed to connect to the switch\n");
+		return ret;
 	}
 
-	/*
-    netlink_getlink(nsock);
-    netlink_recv(nsock);
-	*/
-	printf("start\n");
+	swlib_scan(dev);
+
+	/* run loop */
 	while(1) {
-		FD_ZERO(&r);
-		FD_SET(nsock, &r);
-
-		ret = select(nsock + 1, &r, NULL, NULL, NULL);
-		printf("select trigger\n");
-		switch (ret) {
-			case -1:
-				if (errno != EINTR) {
-					LOGE("select");
-					goto out;
-				}
-				continue;
-			case 0:	 /* timeout */
-				break;
-			default:
-				break;
+		/* port 0 is wan port */
+		cur_status = probe_port_status(dev, 0);
+		if (cur_status < 0) {
+			goto out;
 		}
 
-		if (FD_ISSET(nsock, &r)) {
-			printf("any event\n");
-			netlink_recv(nsock);
+		if ((cur_status == 1) && (port_status == 0)) {
+			/* port link status: down->up */
+			port_status = 1;
+			LOGI("wan link up");
+		} else if ((cur_status == 0) && (port_status == 1)) {
+			port_status = 0;
+			LOGI("wan link down");
+			/* renew dhcp */
+			system("killall -16 udhcpc");
+		} else {
+			/* nothing to do */
 		}
+		sleep(2);
 	}
-
-    return 0;
 
 out:
-	close(nsock);
+	swlib_free_all(dev);
 	return ret;
 }
