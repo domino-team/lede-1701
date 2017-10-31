@@ -1,3 +1,4 @@
+/* general */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+/* libsw */
 #include <linux/types.h>
 #include <linux/netlink.h>
 #include <linux/genetlink.h>
@@ -18,7 +20,17 @@
 #include <linux/switch.h>
 #include <swlib.h>
 
+/* libubus */
+#include <libubox/blobmsg_json.h>
+#include <libubus.h>
+
+struct blob_buf b;
+
 static int use_syslog;
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
 
 #define TIME_FORMAT "%F %T"
 #define USE_SYSLOG(ident)                          \
@@ -53,6 +65,39 @@ static int use_syslog;
                         ## __VA_ARGS__);                                          \
         } }                                                                       \
     while (0)
+
+static void receive_call_result_data(struct ubus_request *req, int type, struct blob_attr *msg)
+{
+	char *str;
+	if (!msg)
+		return;
+
+	str = blobmsg_format_json_indent(msg, true, -1);
+	printf("%s\n", str);
+	free(str);
+}
+
+static int ubus_cli_call(struct ubus_context *ctx, int argc, char **argv)
+{
+	unsigned int id = 0;
+	int ret = 0;
+
+	if (argc < 2 || argc > 3)
+		return -2;
+
+	blob_buf_init(&b, 0);
+
+	if (argc == 3 && !blobmsg_add_json_from_string(&b, argv[2])) {
+		return -1;
+	}
+
+	ret = ubus_lookup_id(ctx, argv[0], &id);
+
+	if (ret)
+		return ret;
+
+	return ubus_invoke(ctx, id, argv[1], b.head, receive_call_result_data, NULL, 30 * 1000);
+}
 
 /**
  * @return: -1 = error, 1 = link up, 0 = link down
@@ -112,6 +157,11 @@ int main(int argc, char **argv)
 	int port_status = 0;
 	char *cdev = NULL;
 
+	struct ubus_context *ctx;
+
+	char *wan_msg[] = {"network.interface", "notify_proto", "{\"interface\":\"wan6\",\"action\":2,\"signal\":16}"};
+	char *wan6_msg[] = {"network.interface", "notify_proto", "{\"interface\":\"wan\",\"action\":2,\"signal\":16}"};
+
 	struct switch_dev *dev;
 
 	while ((c = getopt(argc, argv, "d:p:h")) != -1) {
@@ -150,11 +200,18 @@ int main(int argc, char **argv)
 
 	swlib_scan(dev);
 
+	ctx = ubus_connect(NULL);
+	if (!ctx) {
+		LOGE("Failed to connect ubus\n");
+		goto out;
+	}
+
 	/* run loop */
 	while(1) {
 		/* port 0 is wan port */
 		cur_status = probe_port_status(dev, 0);
 		if (cur_status < 0) {
+			LOGI("Failed to check port status, exit!!!");
 			goto out;
 		}
 
@@ -166,7 +223,13 @@ int main(int argc, char **argv)
 			port_status = 0;
 			LOGI("wan link down");
 			/* renew dhcp */
-			system("killall -16 udhcpc");
+			ubus_cli_call(ctx, ARRAY_SIZE(wan_msg), wan_msg);
+			ubus_cli_call(ctx, ARRAY_SIZE(wan6_msg), wan6_msg);
+			/*
+			ubus call network.interface notify_proto '{"interface":"wan","action":2,"signal":16}'
+			ubus call network.interface notify_proto '{"interface":"wan6","action":2,"signal":16}'
+			*/
+			/* system("killall -16 udhcpc"); */
 		} else {
 			/* nothing to do */
 		}
@@ -174,6 +237,11 @@ int main(int argc, char **argv)
 	}
 
 out:
-	swlib_free_all(dev);
+	if (ctx)
+		ubus_free(ctx);
+
+	if (dev)
+		swlib_free_all(dev);
+
 	return ret;
 }

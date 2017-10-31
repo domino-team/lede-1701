@@ -17,7 +17,7 @@ define Package/mtk_wanstate
   SECTION:=base
   CATEGORY:=gl-inet
   TITLE:=Change wan port status for MediaTek chip
-  DEPENDS:=@TARGET_ramips +libnl-tiny
+  DEPENDS:=@TARGET_ramips +libnl-tiny +libubus +libblobmsg-json +libubox
 endef
 
 TARGET_CPPFLAGS := \
