@@ -35,7 +35,7 @@ _ucidef_set_interface() {
 	json_select_object "$name"
 	json_add_string ifname "$iface"
 
-	if ! json_is_a protocol string; then
+	if ! json_is_a protocol string || [ -n "$proto" ]; then
 		case "$proto" in
 			static|dhcp|none|pppoe) : ;;
 			*)
@@ -615,6 +615,26 @@ ucidef_add_gpio_switch() {
 			json_add_string name "$name"
 			json_add_int pin "$pin"
 			json_add_int default "$default"
+		json_select ..
+	json_select ..
+}
+
+ucidef_set_hostname() {
+	local hostname="$1"
+
+	json_select_object system
+		json_add_string hostname "$hostname"
+	json_select ..
+}
+
+ucidef_set_ntpserver() {
+	local server
+
+	json_select_object system
+		json_select_array ntpserver
+			for server in "$@"; do
+				json_add_string "" "$server"
+			done
 		json_select ..
 	json_select ..
 }

@@ -24,6 +24,7 @@ get_status_led() {
 	dir-860l-b1|\
 	e1700|\
 	fonera20n|\
+	hg255d|\
 	kn_rc|\
 	kn_rf|\
 	kng_rc|\
@@ -53,7 +54,8 @@ get_status_led() {
 	jhr-n825r|\
 	mpr-a1|\
 	mpr-a2|\
-	mzk-ex750np)
+	mzk-ex750np|\
+	wn3000rpv3)
 		status_led="$board:red:power"
 		;;
 	ac1200pro|\
@@ -107,6 +109,7 @@ get_status_led() {
 	w502u)
 		status_led="$board:blue:wps"
 		;;
+	d240|\
 	dap-1350|\
 	na930|\
 	pbr-m1|\
@@ -119,7 +122,8 @@ get_status_led() {
 	wli-tx4-ag300n|\
 	wt3020|\
 	y1|\
-	y1s)
+	y1s|\
+	youku-yk1)
 		status_led="$board:blue:power"
 		;;
 	db-wrt01|\

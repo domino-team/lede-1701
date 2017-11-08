@@ -593,6 +593,14 @@ dhcp_option_append() {
 	xappend "--dhcp-option${force:+-force}=${networkid:+$networkid,}$option"
 }
 
+dhcp_option_append() {
+	local option="$1"
+	local networkid="$2"
+	local force="$3"
+
+	xappend "--dhcp-option${force:+-force}=${networkid:+$networkid,}$option"
+}
+
 dhcp_option_add() {
 	# NOTE: dnsmasq has explicit "option6:" prefix for DHCPv6 so no collisions
 	local cfg="$1"
@@ -604,14 +612,14 @@ dhcp_option_add() {
 	[ "$force" = "2" ] && opt="dhcp_option_force"
 
 	local list_len
-	config_get list_len "$cfg" "${opt}_LENGTH"
+	config_get list_len "$cfg" dhcp_option_LENGTH
 
 	if [ -n "$list_len" ]; then
-		config_list_foreach "$cfg" "$opt" dhcp_option_append "$networkid" "$force"
+		config_list_foreach "$cfg" dhcp_option dhcp_option_append "$networkid" "$force"
 	else
-		config_get dhcp_option "$cfg" "$opt"
+		config_get dhcp_option "$cfg" dhcp_option
 
-		[ -n "$dhcp_option" ] && echo "Warning: the 'option $opt' syntax is deprecated, use 'list $opt'" >&2
+		[ -n "$dhcp_option" ] && echo "Warning: the 'option dhcp_option' syntax is deprecated, use 'list dhcp_option'" >&2
 
 		local option
 		for option in $dhcp_option; do

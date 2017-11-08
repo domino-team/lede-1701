@@ -65,7 +65,6 @@
 		#size-cells = <1>;
 		compatible = "jedec,spi-nor";
 		reg = <0>;
-		linux,modalias = "m25p80", "w25q256";
 		spi-max-frequency = <10000000>;
 
 		partition@0 {
@@ -96,7 +95,7 @@
 &pinctrl {
 	state_default: pinctrl0 {
 		default {
-			ralink,group = "i2c", "uartf", "rgmii1", "rgmii2", "ephy", "wled", "nd_sd";
+			ralink,group = "i2c", "rgmii1", "ephy", "wled";
 			ralink,function = "gpio";
 		};
 	};
@@ -104,7 +103,6 @@
 
 &ethernet {
 	pinctrl-names = "default";
-	pinctrl-0 = <&ephy_pins>;
 	mtd-mac-address = <&factory 0x4>;
 	mediatek,portmap = "llllw";
 };

@@ -185,7 +185,7 @@ define Device/R7500
 	PAGESIZE := 2048
 	BOARD_NAME := r7500
 	DEVICE_TITLE := Netgear Nighthawk X4 R7500
-	DEVICE_PACKAGES := ath10k-firmware-qca99x0
+	DEVICE_PACKAGES := ath10k-firmware-qca988x
 endef
 
 define Device/R7500v2
@@ -198,7 +198,7 @@ define Device/R7500v2
 	PAGESIZE := 2048
 	BOARD_NAME := r7500v2
 	DEVICE_TITLE := Netgear Nighthawk X4 R7500v2
-	DEVICE_PACKAGES := ath10k-firmware-qca99x0
+	DEVICE_PACKAGES := ath10k-firmware-qca99x0 ath10k-firmware-qca988x
 endef
 
 define Device/R7800
@@ -220,7 +220,7 @@ define Device/NBG6817
 	BLOCKSIZE := 64k
 	BOARD_NAME := nbg6817
 	DEVICE_TITLE := ZyXEL NBG6817
-	DEVICE_PACKAGES := ath10k-firmware-qca9984 e2fsprogs losetup
+	DEVICE_PACKAGES := ath10k-firmware-qca9984 e2fsprogs kmod-fs-ext4 losetup
 	$(call Device/ZyXELImage)
 endef
 

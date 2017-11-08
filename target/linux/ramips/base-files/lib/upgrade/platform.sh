@@ -35,6 +35,7 @@ platform_check_image() {
 	cf-wr800n|\
 	cs-qr10|\
 	d105|\
+	d240|\
 	dap-1350|\
 	db-wrt01|\
 	dcs-930|\
@@ -158,6 +159,7 @@ platform_check_image() {
 	wli-tx4-ag300n|\
 	wlr-6000|\
 	wmr-300|\
+	wn3000rpv3|\
 	wnce2001|\
 	wndr3700v5|\
 	wr512-3gn|\

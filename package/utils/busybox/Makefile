@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=busybox
 PKG_VERSION:=1.25.1
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 PKG_FLAGS:=essential
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
@@ -83,6 +83,12 @@ ifdef CONFIG_BUSYBOX_CONFIG_PAM
   TARGET_CFLAGS += -I$(STAGING_DIR)/usr/include
   export LDFLAGS=$(TARGET_LDFLAGS)
   LDLIBS += pam pam_misc pthread
+endif
+
+ifdef CONFIG_BUSYBOX_DEFAULT_NSLOOKUP_LEDE
+  ifeq ($(CONFIG_USE_GLIBC),y)
+	LDLIBS += resolv
+  endif
 endif
 
 define Build/Compile
