@@ -7,11 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=hostapd
-<<<<<<< HEAD
-PKG_RELEASE:=5
-=======
 PKG_RELEASE:=6
->>>>>>> upstream/lede-17.01
 
 PKG_SOURCE_URL:=http://w1.fi/hostap.git
 PKG_SOURCE_PROTO:=git
