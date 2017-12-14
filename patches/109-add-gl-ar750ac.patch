@@ -1,35 +1,105 @@
-Index: lede-ar750/target/linux/ar71xx/base-files/etc/board.d/01_leds
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/base-files/etc/board.d/01_leds
-+++ lede-ar750/target/linux/ar71xx/base-files/etc/board.d/01_leds
-@@ -275,6 +275,10 @@ dlan-pro-1200-ac)
+--- a/target/linux/ar71xx/base-files/etc/board.d/01_leds
++++ b/target/linux/ar71xx/base-files/etc/board.d/01_leds
+@@ -49,6 +49,10 @@ antrouter-r1)
+ 	ucidef_set_led_wlan "wlan" "WLAN" "$board:green:wlan" "phy0tpt"
+ 	ucidef_set_led_default "btc" "BTC" "$board:green:btc" "0"
+ 	;;
++ap121f)
++	ucidef_set_led_netdev "lan" "LAN" "$board:green:lan" "eth0"
++	ucidef_set_led_wlan "wlan" "WLAN" "$board:green:wlan" "phy0tpt"
++	;;
+ arduino-yun)
+ 	ucidef_set_led_wlan "wlan" "WLAN" "arduino:blue:wlan" "phy0tpt"
+ 	ucidef_set_led_usbdev "usb" "USB" "arduino:white:usb" "1-1.1"
+@@ -183,6 +187,9 @@ cr5000)
+ 	ucidef_set_led_wlan "wlan" "WLAN" "pcs:blue:wlan" "phy0tpt"
+ 	ucidef_set_led_usbdev "usb" "USB" "pcs:white:wps" "1-1"
+ 	;;
++dr344)
++	ucidef_set_led_netdev "lan" "LAN" "$board:green:lan" "eth1"
++	;;
+ dragino2)
+ 	ucidef_set_led_wlan "wlan" "WLAN" "$board:red:wlan" "phy0tpt"
+ 	ucidef_set_led_netdev "lan" "LAN" "$board:red:lan" "eth0"
+@@ -275,6 +282,10 @@ dlan-pro-1200-ac)
  	ucidef_set_led_gpio "plcw" "dLAN" "devolo:status:dlan" "17" "0"
  	ucidef_set_led_gpio "plcr" "dLAN" "devolo:error:dlan" "16" "0"
  	;;
 +gl-ar750)
-+	ucidef_set_led_wlan "wlan-2g" "WLAN-2G" "gl-ar750:wlan-2g" "phy1tpt"
-+	ucidef_set_led_wlan "wlan-5g" "WLAN-5G" "gl-ar750:wlan-5g" "phy0tpt"
++	ucidef_set_led_wlan "wlan-2g" "WLAN-2G" "gl-ar750:white:wlan2g" "phy1tpt"
++	ucidef_set_led_wlan "wlan-5g" "WLAN-5G" "gl-ar750:white:wlan5g" "phy0tpt"
 +	;;
  gl-ar150|\
  gl-ar300|\
  gl-ar300m|\
-Index: lede-ar750/target/linux/ar71xx/base-files/etc/board.d/02_network
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/base-files/etc/board.d/02_network
-+++ lede-ar750/target/linux/ar71xx/base-files/etc/board.d/02_network
-@@ -124,6 +124,7 @@ ar71xx_setup_interfaces()
+--- a/target/linux/ar71xx/base-files/etc/board.d/02_network
++++ b/target/linux/ar71xx/base-files/etc/board.d/02_network
+@@ -42,7 +42,6 @@ ar71xx_setup_interfaces()
+ 	tl-mr3420|\
+ 	tl-wdr3320-v2|\
+ 	tl-wdr3500|\
+-	tl-wr741nd|\
+ 	tl-wr741nd-v4|\
+ 	tl-wr841n-v11|\
+ 	tl-wr841n-v9|\
+@@ -61,6 +60,7 @@ ar71xx_setup_interfaces()
+ 	antminer-s1|\
+ 	antminer-s3|\
+ 	antrouter-r1|\
++	ap121f|\
+ 	aw-nr580|\
+ 	bullet-m|\
+ 	c-55|\
+@@ -122,8 +122,10 @@ ar71xx_setup_interfaces()
+ 	a60|\
+ 	alfa-ap96|\
  	alfa-nx|\
++	dr344|\
  	gl-ar150|\
  	gl-ar300m|\
 +	gl-ar750|\
  	gl-domino|\
  	gl-inet|\
  	gl-mifi|\
-Index: lede-ar750/target/linux/ar71xx/base-files/etc/diag.sh
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/base-files/etc/diag.sh
-+++ lede-ar750/target/linux/ar71xx/base-files/etc/diag.sh
-@@ -475,6 +475,7 @@ set_state() {
+@@ -145,7 +147,6 @@ ar71xx_setup_interfaces()
+ 	all0315n|\
+ 	dlan-hotspot|\
+ 	dlan-pro-500-wp|\
+-	dr344|\
+ 	ja76pf2|\
+ 	rocket-m-ti|\
+ 	ubnt-unifi-outdoor)
+@@ -400,6 +401,7 @@ ar71xx_setup_interfaces()
+ 		ucidef_set_interface_raw "eth" "eth0"
+ 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" "wan"
+ 		;;
++	tl-wr741nd|\
+ 	tl-wr841n-v7)
+ 		ucidef_set_interfaces_lan_wan "eth0" "eth1"
+ 		ucidef_add_switch "switch0" \
+@@ -480,7 +482,8 @@ ar71xx_setup_macs()
+ 		wan_mac=$(mtd_get_mac_binary caldata 6)
+ 		;;
+ 	tl-wr1043nd-v4)
+-		wan_mac=$(mtd_get_mac_binary config 0x1017c)
++		lan_mac=$(mtd_get_mac_binary product-info 8)
++		wan_mac=$(macaddr_add "$lan_mac" 1)
+ 		;;
+ 	esr900)
+ 		wan_mac=$(mtd_get_mac_ascii u-boot-env "wanaddr")
+--- a/target/linux/ar71xx/base-files/etc/diag.sh
++++ b/target/linux/ar71xx/base-files/etc/diag.sh
+@@ -29,6 +29,9 @@ get_status_led() {
+ 	xd3200)
+ 		status_led="$board:green:system"
+ 		;;
++	ap121f)
++		status_led="$board:green:vpn"
++		;;
+ 	ap132|\
+ 	db120|\
+ 	dr344|\
+@@ -475,6 +478,7 @@ set_state() {
  	done)
  		status_led_on
  		case $(ar71xx_board_name) in
@@ -37,11 +107,19 @@ Index: lede-ar750/target/linux/ar71xx/base-files/etc/diag.sh
  		gl-ar300m)
  			fw_printenv lc >/dev/null 2>&1 && fw_setenv "bootcount" 0
  			;;
-Index: lede-ar750/target/linux/ar71xx/base-files/lib/ar71xx.sh
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/base-files/lib/ar71xx.sh
-+++ lede-ar750/target/linux/ar71xx/base-files/lib/ar71xx.sh
-@@ -626,6 +626,9 @@ ar71xx_board_detect() {
+--- a/target/linux/ar71xx/base-files/lib/ar71xx.sh
++++ b/target/linux/ar71xx/base-files/lib/ar71xx.sh
+@@ -433,6 +433,9 @@ ar71xx_board_detect() {
+ 	*AP121-MINI)
+ 		name="ap121-mini"
+ 		;;
++	*"AP121F")
++		name="ap121f"
++		;;
+ 	*"AP132 reference board")
+ 		name="ap132"
+ 		;;
+@@ -626,6 +629,9 @@ ar71xx_board_detect() {
  	*"GL-AR300M")
  		name="gl-ar300m"
  		;;
@@ -51,11 +129,26 @@ Index: lede-ar750/target/linux/ar71xx/base-files/lib/ar71xx.sh
  	*"GL-MIFI")
  		name="gl-mifi"
  		;;
-Index: lede-ar750/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
-+++ lede-ar750/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
-@@ -572,6 +572,7 @@ platform_check_image() {
+--- a/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
++++ b/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
+@@ -111,7 +111,7 @@ tplink_pharos_check_image() {
+ 	# is accepted (loading the first 1.5M of a remote image for this check seems
+ 	# a bit extreme)
+ 	dd if="$1" bs=1 skip=1511432 count=1024 2>/dev/null | while read line; do
+-		[ "$line" == "$model_string" ] && break
++		[ "$line" = "$model_string" ] && break
+ 	done || {
+ 		echo "Unsupported image (model not in support-list)"
+ 		return 1
+@@ -233,6 +233,7 @@ platform_check_image() {
+ 	airgatewaypro|\
+ 	airgateway|\
+ 	airrouter|\
++	ap121f|\
+ 	ap132|\
+ 	ap90q|\
+ 	bullet-m|\
+@@ -572,6 +573,7 @@ platform_check_image() {
  		cybertan_check_image "$1" && return 0
  		return 1
  		;;
@@ -63,7 +156,7 @@ Index: lede-ar750/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
  	gl-ar300m)
  		platform_check_image_gl_ar300m "$1" "$board" "$magic" && return 0
  		return 1
-@@ -648,6 +649,7 @@ platform_pre_upgrade() {
+@@ -648,6 +650,7 @@ platform_pre_upgrade() {
  	local board=$(ar71xx_board_name)
  
  	case "$board" in
@@ -71,11 +164,17 @@ Index: lede-ar750/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
  	gl-ar300m)
  		platform_pre_upgrade_gl_ar300m "$1"
  		;;
-Index: lede-ar750/target/linux/ar71xx/config-4.4
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/config-4.4
-+++ lede-ar750/target/linux/ar71xx/config-4.4
-@@ -104,6 +104,7 @@ CONFIG_ATH79_MACH_F9K1115V2=y
+--- a/target/linux/ar71xx/config-4.4
++++ b/target/linux/ar71xx/config-4.4
+@@ -42,6 +42,7 @@ CONFIG_ATH79_MACH_ANTMINER_S1=y
+ CONFIG_ATH79_MACH_ANTMINER_S3=y
+ CONFIG_ATH79_MACH_ANTROUTER_R1=y
+ CONFIG_ATH79_MACH_AP121=y
++CONFIG_ATH79_MACH_AP121F=y
+ CONFIG_ATH79_MACH_AP132=y
+ CONFIG_ATH79_MACH_AP136=y
+ CONFIG_ATH79_MACH_AP143=y
+@@ -104,6 +105,7 @@ CONFIG_ATH79_MACH_F9K1115V2=y
  CONFIG_ATH79_MACH_GL_AR150=y
  CONFIG_ATH79_MACH_GL_AR300=y
  CONFIG_ATH79_MACH_GL_AR300M=y
@@ -83,7 +182,7 @@ Index: lede-ar750/target/linux/ar71xx/config-4.4
  CONFIG_ATH79_MACH_GL_DOMINO=y
  CONFIG_ATH79_MACH_GL_INET=y
  CONFIG_ATH79_MACH_GL_MIFI=y
-@@ -362,12 +363,12 @@ CONFIG_MTD_M25P80=y
+@@ -362,12 +364,12 @@ CONFIG_MTD_M25P80=y
  # CONFIG_MTD_MAP_BANK_WIDTH_4 is not set
  CONFIG_MTD_MYLOADER_PARTS=y
  CONFIG_MTD_NAND=y
@@ -97,11 +196,66 @@ Index: lede-ar750/target/linux/ar71xx/config-4.4
  CONFIG_MTD_SPINAND_ONDIEECC=y
  CONFIG_MTD_SPI_NOR=y
  CONFIG_MTD_SPLIT_FIRMWARE=y
-Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
-+++ lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
-@@ -680,6 +680,16 @@ config ATH79_MACH_GL_AR300M
+--- a/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
++++ b/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
+@@ -16,6 +16,16 @@ config ATH79_MACH_ALFA_AP120C
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_WMAC
+ 
++config ATH79_MACH_AP121F
++	bool "ALFA Network AP121F support"
++	select SOC_AR933X
++	select ATH79_DEV_ETH
++	select ATH79_DEV_GPIO_BUTTONS
++	select ATH79_DEV_LEDS_GPIO
++	select ATH79_DEV_M25P80
++	select ATH79_DEV_USB
++	select ATH79_DEV_WMAC
++
+ config ATH79_MACH_ALFA_AP96
+ 	bool "ALFA Network AP96 board support"
+ 	select SOC_AR71XX
+@@ -252,6 +262,7 @@ config ATH79_MACH_ESR1750
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_USB
+ 	select ATH79_DEV_WMAC
++	select ATH79_NVRAM
+ 
+ config ATH79_MACH_SOM9331
+ 	bool "SOM9331 support"
+@@ -458,7 +469,6 @@ config ATH79_MACH_DIR_505_A1
+ 	select ATH79_DEV_LEDS_GPIO
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_WMAC
+-	select ATH79_NVRAM
+ 
+ config ATH79_MACH_DIR_600_A1
+ 	bool "D-Link DIR-600 A1/DIR-615 E1/DIR-615 E4 support"
+@@ -489,7 +499,6 @@ config ATH79_MACH_DIR_615_I1
+ 	select ATH79_DEV_LEDS_GPIO
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_WMAC
+-	select ATH79_NVRAM
+ 
+ config ATH79_MACH_DIR_825_B1
+ 	bool "D-Link DIR-825 rev. B1 board support"
+@@ -521,6 +530,7 @@ config ATH79_MACH_DIR_869_A1
+ 	select ATH79_DEV_LEDS_GPIO
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_WMAC
++	select ATH79_NVRAM
+ 
+ config ATH79_MACH_DLAN_HOTSPOT
+ 	bool "devolo dLAN Hotspot support"
+@@ -617,6 +627,7 @@ config ATH79_MACH_ESR900
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_USB
+ 	select ATH79_DEV_WMAC
++	select ATH79_NVRAM
+ 
+ config ATH79_MACH_EW_DORIN
+ 	bool "embedded wireless Dorin Platform support"
+@@ -680,6 +691,16 @@ config ATH79_MACH_GL_AR300M
  	select ATH79_DEV_USB
  	select ATH79_DEV_WMAC
  
@@ -118,11 +272,49 @@ Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Kconfig.openwrt
  config ATH79_MACH_GL_DOMINO
  	bool "DOMINO support"
  	select SOC_AR933X
-Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Makefile
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/files/arch/mips/ath79/Makefile
-+++ lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Makefile
-@@ -108,6 +108,7 @@ obj-$(CONFIG_ATH79_MACH_F9K1115V2)		+= m
+@@ -1603,7 +1624,6 @@ config ATH79_MACH_TEW_673GRU
+ 	select ATH79_DEV_LEDS_GPIO
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_USB
+-	select ATH79_NVRAM
+ 
+ config ATH79_MACH_TEW_712BR
+ 	bool "TRENDnet TEW-712BR support"
+@@ -1613,7 +1633,6 @@ config ATH79_MACH_TEW_712BR
+ 	select ATH79_DEV_LEDS_GPIO
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_WMAC
+-	select ATH79_NVRAM
+ 
+ config ATH79_MACH_TEW_732BR
+ 	bool "TRENDnet TEW-732BR support"
+@@ -1744,6 +1763,7 @@ config ATH79_MACH_NBG6716
+ 	select ATH79_DEV_NFC
+ 	select ATH79_DEV_USB
+ 	select ATH79_DEV_WMAC
++	select ATH79_NVRAM
+ 
+ config ATH79_MACH_CARAMBOLA2
+ 	bool "8devices Carambola2 board"
+@@ -1846,6 +1866,7 @@ config ATH79_MACH_DAP_2695_A1
+ 	select ATH79_DEV_LEDS_GPIO
+ 	select ATH79_DEV_M25P80
+ 	select ATH79_DEV_WMAC
++	select ATH79_NVRAM
+ 
+ config ATH79_MACH_TL_WPA8630
+ 	bool "TP-Link TL-WPA8630 support"
+--- a/target/linux/ar71xx/files/arch/mips/ath79/Makefile
++++ b/target/linux/ar71xx/files/arch/mips/ath79/Makefile
+@@ -48,6 +48,7 @@ obj-$(CONFIG_ATH79_MACH_ANTMINER_S1)		+=
+ obj-$(CONFIG_ATH79_MACH_ANTMINER_S3)		+= mach-antminer-s3.o
+ obj-$(CONFIG_ATH79_MACH_ANTROUTER_R1)		+= mach-antrouter-r1.o
+ obj-$(CONFIG_ATH79_MACH_AP121)			+= mach-ap121.o
++obj-$(CONFIG_ATH79_MACH_AP121F)			+= mach-ap121f.o
+ obj-$(CONFIG_ATH79_MACH_AP132)			+= mach-ap132.o
+ obj-$(CONFIG_ATH79_MACH_AP136)			+= mach-ap136.o
+ obj-$(CONFIG_ATH79_MACH_AP143)			+= mach-ap143.o
+@@ -108,6 +109,7 @@ obj-$(CONFIG_ATH79_MACH_F9K1115V2)		+= m
  obj-$(CONFIG_ATH79_MACH_GL_AR150)		+= mach-gl-ar150.o
  obj-$(CONFIG_ATH79_MACH_GL_AR300)		+= mach-gl-ar300.o
  obj-$(CONFIG_ATH79_MACH_GL_AR300M)		+= mach-gl-ar300m.o
@@ -130,11 +322,17 @@ Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/Makefile
  obj-$(CONFIG_ATH79_MACH_GL_DOMINO)		+= mach-gl-domino.o
  obj-$(CONFIG_ATH79_MACH_GL_INET)		+= mach-gl-inet.o
  obj-$(CONFIG_ATH79_MACH_GL_MIFI)		+= mach-gl-mifi.o
-Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
-+++ lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
-@@ -99,6 +99,7 @@ enum ath79_mach_type {
+--- a/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
++++ b/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
+@@ -30,6 +30,7 @@ enum ath79_mach_type {
+ 	ATH79_MACH_ANTROUTER_R1,		/* Antrouter R1 */
+ 	ATH79_MACH_AP121,			/* Atheros AP121 reference board */
+ 	ATH79_MACH_AP121_MINI,			/* Atheros AP121-MINI reference board */
++	ATH79_MACH_AP121F,			/* ALFA Network AP121F */
+ 	ATH79_MACH_AP132,			/* Atheros AP132 reference board */
+ 	ATH79_MACH_AP135_020,			/* Atheros AP135-020 reference board */
+ 	ATH79_MACH_AP136_010,			/* Atheros AP136-010 reference board */
+@@ -99,6 +100,7 @@ enum ath79_mach_type {
  	ATH79_MACH_GL_AR150,			/* GL-AR150 support */
  	ATH79_MACH_GL_AR300,			/* GL-AR300 */
  	ATH79_MACH_GL_AR300M,			/* GL-AR300M */
@@ -142,11 +340,26 @@ Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
  	ATH79_MACH_GL_DOMINO,			/* Domino */
  	ATH79_MACH_GL_INET,			/* GL-CONNECT GL-INET */
  	ATH79_MACH_GL_MIFI,			/* GL-MIFI support */
-Index: lede-ar750/target/linux/ar71xx/image/generic.mk
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/image/generic.mk
-+++ lede-ar750/target/linux/ar71xx/image/generic.mk
-@@ -148,6 +148,16 @@ define Device/gl-ar300m
+--- a/target/linux/ar71xx/image/generic.mk
++++ b/target/linux/ar71xx/image/generic.mk
+@@ -1,3 +1,16 @@
++define Device/ap121f
++  DEVICE_TITLE := ALFA Network AP121F
++  DEVICE_PACKAGES := kmod-usb-core kmod-usb2 kmod-usb-storage -swconfig
++  BOARDNAME := AP121F
++  IMAGE_SIZE := 16064k
++  CONSOLE := ttyATH0,115200
++  MTDPARTS := spi0.0:192k(u-boot)ro,64k(u-boot-env),64k(art)ro,-(firmware)
++  SUPPORTED_DEVICES := ap121f
++  IMAGE/sysupgrade.bin = append-kernel | pad-to $$$$(BLOCKSIZE) | \
++	append-rootfs | pad-rootfs | append-metadata | check-size $$$$(IMAGE_SIZE)
++endef
++TARGET_DEVICES += ap121f
++
+ define Device/ap90q
+   DEVICE_TITLE := YunCore AP90Q
+   BOARDNAME = AP90Q
+@@ -148,6 +161,16 @@ define Device/gl-ar300m
  endef
  TARGET_DEVICES += gl-ar300m
  
@@ -163,10 +376,8 @@ Index: lede-ar750/target/linux/ar71xx/image/generic.mk
  define Device/gl-domino
    DEVICE_TITLE := GL Domino Pi
    DEVICE_PACKAGES := kmod-usb-core kmod-usb2
-Index: lede-ar750/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
-===================================================================
---- lede-ar750.orig/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
-+++ lede-ar750/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
+--- a/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
++++ b/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10k-caldata
 @@ -67,6 +67,10 @@ case "$FIRMWARE" in
  		ath10kcal_extract "art" 20480 2116
  		ath10kcal_patch_mac $(mtd_get_mac_binary art 18)
@@ -178,10 +389,8 @@ Index: lede-ar750/target/linux/ar71xx/base-files/etc/hotplug.d/firmware/11-ath10
  	epg5000 | \
  	esr1750)
  		ath10kcal_extract "caldata" 20480 2116
-Index: lede-ar750/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq_dhcp
-===================================================================
 --- /dev/null
-+++ lede-ar750/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq_dhcp
++++ b/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq_dhcp
 @@ -0,0 +1,32 @@
 +#!/bin/sh
 +#
@@ -215,11 +424,9 @@ Index: lede-ar750/target/linux/ar71xx/base-files/etc/uci-defaults/03_fix_dnsmasq
 +
 +exit 0
 +
-Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
-===================================================================
 --- /dev/null
-+++ lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
-@@ -0,0 +1,187 @@
++++ b/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
+@@ -0,0 +1,167 @@
 +/*
 + *  GLI AR750 board support
 + *
@@ -254,13 +461,14 @@ Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
 +#include "machtypes.h"
 +#include "pci.h"
 +
-+#define GL_AR750_GPIO_LED_USB		2
-+#define GL_AR750_GPIO_LED_WLAN		13
-+#define GL_AR750_GPIO_LED_LAN		14
-+#define GL_AR750_GPIO_LED_SYSTEM	12
++#define GL_AR750_GPIO_USB_POWER		2
++
++#define GL_AR750_GPIO_LED_WLAN2G       14
++#define GL_AR750_GPIO_LED_WLAN5G       13
++#define GL_AR750_GPIO_LED_POWER	12
++
 +#define GL_AR750_GPIO_BTN_RESET	3
-+#define GL_AR750_GPIO_BTN_LEFT		0
-+#define GL_AR750_GPIO_BTN_RIGHT	1
++#define GL_AR750_GPIO_BTN_RIGHT	0
 +
 +#define GL_AR750_GPIO_I2C_SCL	16
 +#define GL_AR750_GPIO_I2C_SDA	17
@@ -274,55 +482,38 @@ Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
 +#define GL_AR750_PCIE_CALDATA_OFFSET   0x5000
 +
 +static struct gpio_led gl_ar750_leds_gpio[] __initdata = {
-+    {
-+        .name = "gl-ar750:usbpow",
-+        .gpio = GL_AR750_GPIO_LED_USB,
-+        .active_low = 0,
-+        .default_state = 1,
-+    },
-+    {
-+        .name = "gl-ar750:wlan-2g",
-+        .gpio = GL_AR750_GPIO_LED_LAN,
-+        .active_low = 1,
-+    },
-+    {
-+        .name = "gl-ar750:wlan-5g",
-+        .gpio = GL_AR750_GPIO_LED_WLAN,
-+        .active_low = 1,
-+    },
-+    {
-+        .name = "gl-ar750:system",
-+        .gpio = GL_AR750_GPIO_LED_SYSTEM,
-+        .active_low = 1,
-+        .default_state = 1,
++   {
++        .name           = "gl-ar750:white:power",
++        .gpio           = GL_AR750_GPIO_LED_POWER,
++        .default_state  = LEDS_GPIO_DEFSTATE_KEEP,
++        .active_low     = 1,
++    }, {
++        .name           = "gl-ar750:white:wlan2g",
++        .gpio           = GL_AR750_GPIO_LED_WLAN2G,
++        .active_low     = 1,
++    }, {
++        .name           = "gl-ar750:white:wlan5g",
++        .gpio           = GL_AR750_GPIO_LED_WLAN5G,
++        .active_low     = 1,
 +    },
 +};
 +
 +static struct gpio_keys_button gl_ar750_gpio_keys[] __initdata = {
 +    {
-+        .desc = "reset",
-+        .type = EV_KEY,
-+        .code = KEY_RESTART,
-+        .debounce_interval = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
-+        .gpio = GL_AR750_GPIO_BTN_RESET,
-+        .active_low = 1,
-+    },
-+    {
-+        .desc = "button right",
-+        .type = EV_KEY,
-+        .code = BTN_0,
-+        .debounce_interval = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
-+        .gpio = GL_AR750_GPIO_BTN_LEFT,
-+        .active_low = 0,
-+    },
-+    {
-+        .desc = "button left",
-+        .type = EV_KEY,
-+        .code = BTN_1,
-+        .debounce_interval = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
-+        .gpio = GL_AR750_GPIO_BTN_RIGHT,
-+        .active_low = 0,
-+    },
++        .desc                   = "reset",
++        .type                   = EV_KEY,
++        .code                   = KEY_RESTART,
++        .debounce_interval      = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
++        .gpio                   = GL_AR750_GPIO_BTN_RESET,
++        .active_low             = 1,
++       }, {
++        .desc                   = "right",
++        .type                   = EV_KEY,
++        .code                   = BTN_0,
++        .debounce_interval      = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
++        .gpio                   = GL_AR750_GPIO_BTN_RIGHT,
++        .active_low             = 1,
++       },
 +};
 +
 +static struct spi_board_info gl_ar750_spi_info[] = {
@@ -333,13 +524,6 @@ Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
 +        .modalias   = "m25p80",
 +        .platform_data  = NULL,
 +    },
-+    {
-+        .bus_num    = 0,
-+        .chip_select    = 1,
-+        .max_speed_hz   = 25000000,
-+        .modalias   = "ath79-spinand",
-+        .platform_data  = NULL,
-+    }
 +};
 +
 +static struct ath79_spi_platform_data gl_ar750_spi_data = {
@@ -375,6 +559,9 @@ Index: lede-ar750/target/linux/ar71xx/files/arch/mips/ath79/mach-gl-ar750.c
 +    ath79_register_gpio_keys_polled(-1, GL_AR750_KEYS_POLL_INTERVAL,
 +                    ARRAY_SIZE(gl_ar750_gpio_keys),
 +                    gl_ar750_gpio_keys);
++	gpio_request_one(GL_AR750_GPIO_USB_POWER,
++                    GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
++                    "gl-ar750:usbpow");
 +
 +    ath79_register_mdio(0, 0x0);
 +

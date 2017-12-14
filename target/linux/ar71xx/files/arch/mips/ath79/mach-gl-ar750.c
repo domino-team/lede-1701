@@ -32,13 +32,14 @@
 #include "machtypes.h"
 #include "pci.h"
 
-#define GL_AR750_GPIO_LED_USB		2
-#define GL_AR750_GPIO_LED_WLAN		13
-#define GL_AR750_GPIO_LED_LAN		14
-#define GL_AR750_GPIO_LED_SYSTEM	12
+#define GL_AR750_GPIO_USB_POWER		2
+
+#define GL_AR750_GPIO_LED_WLAN2G       14
+#define GL_AR750_GPIO_LED_WLAN5G       13
+#define GL_AR750_GPIO_LED_POWER	12
+
 #define GL_AR750_GPIO_BTN_RESET	3
-#define GL_AR750_GPIO_BTN_LEFT		0
-#define GL_AR750_GPIO_BTN_RIGHT	1
+#define GL_AR750_GPIO_BTN_RIGHT	0
 
 #define GL_AR750_GPIO_I2C_SCL	16
 #define GL_AR750_GPIO_I2C_SDA	17
@@ -52,55 +53,38 @@
 #define GL_AR750_PCIE_CALDATA_OFFSET   0x5000
 
 static struct gpio_led gl_ar750_leds_gpio[] __initdata = {
-    {
-        .name = "gl-ar750:usbpow",
-        .gpio = GL_AR750_GPIO_LED_USB,
-        .active_low = 0,
-        .default_state = 1,
-    },
-    {
-        .name = "gl-ar750:wlan-2g",
-        .gpio = GL_AR750_GPIO_LED_LAN,
-        .active_low = 1,
-    },
-    {
-        .name = "gl-ar750:wlan-5g",
-        .gpio = GL_AR750_GPIO_LED_WLAN,
-        .active_low = 1,
-    },
-    {
-        .name = "gl-ar750:system",
-        .gpio = GL_AR750_GPIO_LED_SYSTEM,
-        .active_low = 1,
-        .default_state = 1,
+   {
+        .name           = "gl-ar750:white:power",
+        .gpio           = GL_AR750_GPIO_LED_POWER,
+        .default_state  = LEDS_GPIO_DEFSTATE_KEEP,
+        .active_low     = 1,
+    }, {
+        .name           = "gl-ar750:white:wlan2g",
+        .gpio           = GL_AR750_GPIO_LED_WLAN2G,
+        .active_low     = 1,
+    }, {
+        .name           = "gl-ar750:white:wlan5g",
+        .gpio           = GL_AR750_GPIO_LED_WLAN5G,
+        .active_low     = 1,
     },
 };
 
 static struct gpio_keys_button gl_ar750_gpio_keys[] __initdata = {
     {
-        .desc = "reset",
-        .type = EV_KEY,
-        .code = KEY_RESTART,
-        .debounce_interval = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
-        .gpio = GL_AR750_GPIO_BTN_RESET,
-        .active_low = 1,
-    },
-    {
-        .desc = "button right",
-        .type = EV_KEY,
-        .code = BTN_0,
-        .debounce_interval = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
-        .gpio = GL_AR750_GPIO_BTN_LEFT,
-        .active_low = 0,
-    },
-    {
-        .desc = "button left",
-        .type = EV_KEY,
-        .code = BTN_1,
-        .debounce_interval = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
-        .gpio = GL_AR750_GPIO_BTN_RIGHT,
-        .active_low = 0,
-    },
+        .desc                   = "reset",
+        .type                   = EV_KEY,
+        .code                   = KEY_RESTART,
+        .debounce_interval      = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
+        .gpio                   = GL_AR750_GPIO_BTN_RESET,
+        .active_low             = 1,
+       }, {
+        .desc                   = "right",
+        .type                   = EV_KEY,
+        .code                   = BTN_0,
+        .debounce_interval      = GL_AR750_KEYS_DEBOUNCE_INTERVAL,
+        .gpio                   = GL_AR750_GPIO_BTN_RIGHT,
+        .active_low             = 1,
+       },
 };
 
 static struct spi_board_info gl_ar750_spi_info[] = {
@@ -111,13 +95,6 @@ static struct spi_board_info gl_ar750_spi_info[] = {
         .modalias   = "m25p80",
         .platform_data  = NULL,
     },
-    {
-        .bus_num    = 0,
-        .chip_select    = 1,
-        .max_speed_hz   = 25000000,
-        .modalias   = "ath79-spinand",
-        .platform_data  = NULL,
-    }
 };
 
 static struct ath79_spi_platform_data gl_ar750_spi_data = {
@@ -153,6 +130,9 @@ static void __init gl_ar750_setup(void)
     ath79_register_gpio_keys_polled(-1, GL_AR750_KEYS_POLL_INTERVAL,
                     ARRAY_SIZE(gl_ar750_gpio_keys),
                     gl_ar750_gpio_keys);
+	gpio_request_one(GL_AR750_GPIO_USB_POWER,
+                    GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
+                    "gl-ar750:usbpow");
 
     ath79_register_mdio(0, 0x0);
 

@@ -283,8 +283,8 @@ dlan-pro-1200-ac)
 	ucidef_set_led_gpio "plcr" "dLAN" "devolo:error:dlan" "16" "0"
 	;;
 gl-ar750)
-	ucidef_set_led_wlan "wlan-2g" "WLAN-2G" "gl-ar750:wlan-2g" "phy1tpt"
-	ucidef_set_led_wlan "wlan-5g" "WLAN-5G" "gl-ar750:wlan-5g" "phy0tpt"
+	ucidef_set_led_wlan "wlan-2g" "WLAN-2G" "gl-ar750:white:wlan2g" "phy1tpt"
+	ucidef_set_led_wlan "wlan-5g" "WLAN-5G" "gl-ar750:white:wlan5g" "phy0tpt"
 	;;
 gl-ar150|\
 gl-ar300|\
